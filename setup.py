@@ -2,7 +2,7 @@
 # coding: utf-8
 
 from setuptools import setup
-from media_downloader.version import __version__, __author__
+from media_manager.version import __version__, __author__
 from pathlib import Path
 import re
 
@@ -16,20 +16,20 @@ with open("README.md", "w") as readme_file:
 description = 'Download audio/videos from the internet!'
 
 setup(
-    name='media-downloader',
+    name='media-manager',
     version=f"{version}",
     description=description,
     long_description=f'{readme}',
     long_description_content_type='text/markdown',
-    url='https://github.com/Knucklessg1/media-downloader',
+    url='https://github.com/Knucklessg1/media-manager',
     author=__author__,
     author_email='knucklessg1@gmail.com',
     license='Unlicense',
-    packages=['media_downloader'],
+    packages=['media_manager'],
     include_package_data=True,
-    install_requires=['youtube-dl', 'requests'],
-    py_modules=['media_downloader'],
-    package_data={'media_downloader': ['media_downloader']},
+    install_requires=['ffmpeg-python'],
+    py_modules=['media_manager'],
+    package_data={'media_manager': ['media_manager']},
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'License :: Public Domain',
@@ -39,5 +39,5 @@ setup(
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
     ],
-    entry_points={'console_scripts': ['media-downloader = media_downloader.media_downloader:main']},
+    entry_points={'console_scripts': ['media-manager = media_manager.media_manager:main']},
 )
