@@ -1,15 +1,7 @@
-# Media Downloader
-*Version: 0.0.2*
+# Media Manager
+*Version: 0.0.1*
 
-Download videos and audio from the internet!
-
-### Supports:
-- YouTube
-- Twitter
-- Rumble
-- BitChute
-- Vimeo
-- And More!
+Manage your video files by changing the metadata and adding subtitles
 
 ### Usage:
 | Short Flag | Long Flag   | Description                                 |
@@ -24,7 +16,7 @@ Download videos and audio from the internet!
 
 ### Example:
 ```bash
-media-downloader --file "C:\Users\videos.txt" --directory "C:\Users\Downloads" --channel "WhiteHouse" --links "URL1,URL2,URL3"
+media-manager 
 ```
 
 #### Build Instructions

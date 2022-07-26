@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-from media_downloader.version import __version__, __author__, __credits__
-from media_downloader.media_downloader import media_downloader, main, MediaDownloader
+from media_manager.version import __version__, __author__, __credits__
+from media_manager.media_manager import media_manager, main, MediaManager
 
 """
-media-downloader
+media-manager
 
-Download videos and audio from the internet!
+Manage your video files!
 """
 
 __version__ = __version__
