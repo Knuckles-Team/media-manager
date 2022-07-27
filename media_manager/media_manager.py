@@ -85,9 +85,9 @@ class MediaManager:
     def clean_media(self):
         parent_directory = ""
         # Iterate through all media files found
-        for media_file_path in self.media_files:
-            directory = os.path.dirname(media_file_path)
-            media_file = os.path.basename(media_file_path)
+        for media_file_index in range(0, len(self.media_files)):
+            directory = os.path.dirname(self.media_files[media_file_index])
+            media_file = os.path.basename(self.media_files[media_file_index])
             file_name, file_extension = os.path.splitext(media_file)
             new_file_name = file_name
             # Detect if series or a movie
@@ -107,17 +107,23 @@ class MediaManager:
                 self.folder_name = new_file_name
             # Rename directory
             parent_directory = os.path.dirname(os.path.normpath(directory))
-            os.rename(f"{directory}", f"{parent_directory}/{self.folder_name}")
+            # Check if media folder name is the same as what is proposed
+            if f"{directory}" != f"{parent_directory}/{self.folder_name}":
+                os.rename(f"{directory}", f"{parent_directory}/{self.folder_name}")
             # Rename file
             new_media_file_path = f"{parent_directory}/{self.folder_name}/{new_file_name}{file_extension}"
             temporary_media_file_path = f"{parent_directory}/{self.folder_name}/temp-{new_file_name}{file_extension}"
-            os.rename(f"{parent_directory}/{self.folder_name}/{file_name}{file_extension}", new_media_file_path)
-            ffmpeg.input(new_media_file_path).output(temporary_media_file_path, metadata=f"title={new_file_name}", map_metadata=0, map=0, codec="copy").overwrite_output().run()
-            os.remove(new_media_file_path)
-            os.rename(temporary_media_file_path, new_media_file_path)
-
-        # Rediscover cleaned media
-        self.find_media(directory=f"{parent_directory}/{self.folder_name}")
+            # Check if media file name is the same as what is proposed
+            if f"{parent_directory}/{self.folder_name}/{file_name}{file_extension}" != f"{new_media_file_path}":
+                os.rename(f"{parent_directory}/{self.folder_name}/{file_name}{file_extension}", new_media_file_path)
+            # Check if media metadata title is the same as what is proposed
+            current_title_metadata = ffmpeg.probe(new_media_file_path)['format']['tags']['title']
+            if current_title_metadata != new_file_name:
+                ffmpeg.input(new_media_file_path).output(temporary_media_file_path, metadata=f"title={new_file_name}", map_metadata=0, map=0, codec="copy").overwrite_output().run()
+                os.remove(new_media_file_path)
+                os.rename(temporary_media_file_path, new_media_file_path)
+            # Rediscover cleaned media
+            self.find_media(directory=f"{parent_directory}/{self.folder_name}")
 
     def find_media(self, directory):
         self.reset_media_list()
@@ -186,6 +192,7 @@ def main():
 
 if __name__ == "__main__":
     #media_manager(sys.argv[1:])
+
     media_manager_instance = MediaManager()
-    media_manager_instance.find_media(directory="/home//Desktop/test")
+    media_manager_instance.find_media(directory="/home/mrdr/Desktop/test")
     media_manager_instance.clean_media()
