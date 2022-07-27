@@ -13,7 +13,6 @@ class MediaManager:
 
     def __init__(self):
         self.media_files = []
-        self.download_directory = f'{os.path.expanduser("~")}/Downloads'
         self.folder_name = ""
         self.movie_filters = {
             f"2160p.*$": f"2160p",
@@ -74,7 +73,8 @@ class MediaManager:
             f"\.": f" ",
             r"(s[0-9][0-9]*e[0-9][0-9]*).*$": r"- \1",
             r"(S[0-9][0-9]*E[0-9][0-9]*).*$": r"- \1",
-            r"s([0-9][0-9]*)e([0-9][0-9]*)": r"S\1E\2"
+            r"s([0-9][0-9]*)e([0-9][0-9]*)": r"S\1E\2",
+            r" - -": " -",
         }
 
         # in_file = ffmpeg.input('input.mp4')
@@ -84,32 +84,27 @@ class MediaManager:
 
     def clean_media(self):
         parent_directory = ""
+        # Iterate through all media files found
         for media_file_path in self.media_files:
             directory = os.path.dirname(media_file_path)
             media_file = os.path.basename(media_file_path)
             file_name, file_extension = os.path.splitext(media_file)
-
+            new_file_name = file_name
+            # Detect if series or a movie
             if bool(re.search("S[0-9][0-9]*E[0-9][0-9]*", file_name)) or bool(re.search("s[0-9][0-9]*e[0-9][0-9]*", file_name)):
                 filters = self.series_filters
                 series = True
-                print("Series is True")
             else:
                 filters = self.movie_filters
                 series = False
-                print("Series is False")
-
-            new_file_name = file_name
+            # Clean filename
             for key in filters:
                 new_file_name = re.sub(str(key), str(filters[key]), new_file_name)
-                print(f"FILENAME: {new_file_name}")
-
+            # Get folder name for movie or series
             if series:
                 self.folder_name = re.sub(" - S[0-9][0-9]*E[0-9][0-9]*", "", new_file_name)
-                print(f"SERIES NAME: {self.folder_name}")
             else:
                 self.folder_name = new_file_name
-                print(f"FOLDER NAME: {self.folder_name}")
-            print(f"Directory: {directory} - Filename: {new_file_name} - Extension: {file_extension}")
             # Rename directory
             parent_directory = os.path.dirname(os.path.normpath(directory))
             os.rename(f"{directory}", f"{parent_directory}/{self.folder_name}")
@@ -139,10 +134,6 @@ class MediaManager:
         # MKV
         ffmpeg -i "${file}" -f srt -i "${subtitle_files[0]}" -c:v copy -c:a copy -c:s srt -metadata:s:s:0 language=eng "${file::-4}-output.${file_type}"
         """
-
-    def set_save_path(self, download_directory):
-        self.download_directory = download_directory
-        self.download_directory = self.download_directory.replace(os.sep, '/')
 
 
 def media_manager(argv):
@@ -192,5 +183,5 @@ def main():
 if __name__ == "__main__":
     #media_manager(sys.argv[1:])
     media_manager_instance = MediaManager()
-    media_manager_instance.find_media(directory="/home/mrdr/Desktop/Vincenzo")
-    #media_manager_instance.clean_media()
+    media_manager_instance.find_media(directory="/home/Desktop/test")
+    media_manager_instance.clean_media()
