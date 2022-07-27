@@ -7,12 +7,14 @@ import re
 import getopt
 import requests
 import ffmpeg
+import shutil
 
 
 class MediaManager:
 
     def __init__(self):
         self.media_files = []
+        self.media_file_directories = []
         self.folder_name = ""
         self.movie_filters = {
             f"2160p.*$": f"2160p",
@@ -77,13 +79,7 @@ class MediaManager:
             r" - -": " -",
         }
 
-        # in_file = ffmpeg.input('input.mp4')
-        # overlay_file = ffmpeg.input('overlay.png')(ffmpeg.concat(in_file.trim(start_frame=10, end_frame=20),
-        #                                                          in_file.trim(start_frame=30, end_frame=40), ).overlay(
-        # overlay_file.hflip()).drawbox(50, 50, 120, 120, color='red', thickness=5).output('out.mp4').run())
-
     def clean_media(self):
-        parent_directory = ""
         # Iterate through all media files found
         for media_file_index in range(0, len(self.media_files)):
             directory = os.path.dirname(self.media_files[media_file_index])
@@ -130,10 +126,20 @@ class MediaManager:
         for file in os.listdir(directory):
             if file.endswith(".mp4") or file.endswith(".mkv"):
                 self.media_files.append(os.path.join(directory, file))
+                self.media_file_directories.append(os.path.dirname(os.path.join(directory, file)))
+                self.media_file_directories = [*set(self.media_file_directories)]
                 print(os.path.join(directory, file))
 
     def reset_media_list(self):
         self.media_files = []
+        self.media_file_directories = []
+
+    def move_media(self, target_directory):
+        if os.path.isdir(target_directory):
+            for media_directory_index in range(0, len(self.media_file_directories)):
+                shutil.move(self.media_file_directories[media_directory_index], target_directory)
+        else:
+            print(f"Directory {target_directory} does not exist")
 
     def subtitle_manager(self, media_file, subtitle_file):
         ffmpeg.input(media_file, srt=subtitle_file, langauage='eng', format='rawvideo', pix_fmt='rgb24', s='{}x{}'.format(width, height)).output(out_filename, pix_fmt='yuv420p').overwrite_output()
@@ -148,9 +154,10 @@ class MediaManager:
 
 def media_manager(argv):
     media_manager_instance = MediaManager()
-    audio_only = False
+    move_flag = False
+    media_directory = "~/Downloads"
     try:
-        opts, args = getopt.getopt(argv, "hac:d:f:l:", ["help", "audio", "channel=", "directory=", "file=", "links="])
+        opts, args = getopt.getopt(argv, "hmc:d:f:l:", ["help", "move",  "directory="])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
@@ -158,30 +165,24 @@ def media_manager(argv):
         if opt in ("-h", "--help"):
             usage()
             sys.exit()
-        elif opt in ("-a", "--audio"):
-            audio_only = True
-        elif opt in ("-c", "--channel"):
-            video_downloader_instance.get_channel_videos(arg)
         elif opt in ("-d", "--directory"):
-            video_downloader_instance.set_save_path(arg)
-        elif opt in ("-f", "--file"):
-            video_downloader_instance.open_file(arg)
-        elif opt in ("-l", "--links"):
-            url_list = arg.split(",")
-            for url in url_list:
-                video_downloader_instance.append_link(url)
+            media_directory = arg
+        elif opt in ("-m", "--move"):
+            move_flag = True
 
-    video_downloader_instance.download_all(audio_only)
+    media_manager_instance.find_media(directory=media_directory)
+    media_manager_instance.clean_media()
+
+    if move_flag:
+        media_manager_instance.move_media(target_directory="/home/mrdr/Desktop/move_test")
+
 
 
 def usage():
     print(f'Usage:\n'
           f'-h | --help      [ See usage ]\n'
-          f'-a | --audio     [ Download audio only ]\n'
-          f'-c | --channel   [ YouTube Channel/User - Downloads all videos ]\n'
           f'-d | --directory [ Location where the images will be saved ]\n'
-          f'-f | --file      [ Text file to read the URLs from ]\n'
-          f'-l | --links     [ Comma separated URLs (No spaces) ]\n'
+          f'-m | --move      [ Text file to read the URLs from ]\n'
           f'\n'
           f'media-manager -f "file_of_urls.txt" -l "URL1,URL2,URL3" -c "WhiteHouse" -d "~/Downloads"\n')
 
@@ -196,3 +197,4 @@ if __name__ == "__main__":
     media_manager_instance = MediaManager()
     media_manager_instance.find_media(directory="/home/mrdr/Desktop/test")
     media_manager_instance.clean_media()
+    media_manager_instance.move_media(target_directory="/home/mrdr/Desktop/move_test")
