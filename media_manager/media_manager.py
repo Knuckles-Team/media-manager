@@ -110,7 +110,11 @@ class MediaManager:
             os.rename(f"{directory}", f"{parent_directory}/{self.folder_name}")
             # Rename file
             new_media_file_path = f"{parent_directory}/{self.folder_name}/{new_file_name}{file_extension}"
+            temporary_media_file_path = f"{parent_directory}/{self.folder_name}/temp-{new_file_name}{file_extension}"
             os.rename(f"{parent_directory}/{self.folder_name}/{file_name}{file_extension}", new_media_file_path)
+            ffmpeg.input(new_media_file_path).output(temporary_media_file_path, metadata=f"title={new_file_name}", map_metadata=0, map=0, codec="copy").overwrite_output().run()
+            os.remove(new_media_file_path)
+            os.rename(temporary_media_file_path, new_media_file_path)
 
         # Rediscover cleaned media
         self.find_media(directory=f"{parent_directory}/{self.folder_name}")
@@ -183,5 +187,5 @@ def main():
 if __name__ == "__main__":
     #media_manager(sys.argv[1:])
     media_manager_instance = MediaManager()
-    media_manager_instance.find_media(directory="/home/Desktop/test")
+    media_manager_instance.find_media(directory="/home//Desktop/test")
     media_manager_instance.clean_media()
