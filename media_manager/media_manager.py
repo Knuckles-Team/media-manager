@@ -155,9 +155,10 @@ class MediaManager:
 def media_manager(argv):
     media_manager_instance = MediaManager()
     move_flag = False
+    move_directory = "~/Downloads"
     media_directory = "~/Downloads"
     try:
-        opts, args = getopt.getopt(argv, "hmc:d:f:l:", ["help", "move",  "directory="])
+        opts, args = getopt.getopt(argv, "hd:m:", ["help", "move=",  "directory="])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
@@ -169,22 +170,22 @@ def media_manager(argv):
             media_directory = arg
         elif opt in ("-m", "--move"):
             move_flag = True
+            move_directory = arg
 
     media_manager_instance.find_media(directory=media_directory)
     media_manager_instance.clean_media()
 
     if move_flag:
-        media_manager_instance.move_media(target_directory="/home/mrdr/Desktop/move_test")
-
+        media_manager_instance.move_media(target_directory=move_directory)
 
 
 def usage():
     print(f'Usage:\n'
           f'-h | --help      [ See usage ]\n'
-          f'-d | --directory [ Location where the images will be saved ]\n'
-          f'-m | --move      [ Text file to read the URLs from ]\n'
+          f'-d | --directory [ Directory to scan for media ]\n'
+          f'-m | --move      [ Directory to move media folders ]\n'
           f'\n'
-          f'media-manager -f "file_of_urls.txt" -l "URL1,URL2,URL3" -c "WhiteHouse" -d "~/Downloads"\n')
+          f'media-manager -d "~/Downloads" -m "~/User/Media"\n')
 
 
 def main():
@@ -192,9 +193,5 @@ def main():
 
 
 if __name__ == "__main__":
-    #media_manager(sys.argv[1:])
+    media_manager(sys.argv[1:])
 
-    media_manager_instance = MediaManager()
-    media_manager_instance.find_media(directory="/home/mrdr/Desktop/test")
-    media_manager_instance.clean_media()
-    media_manager_instance.move_media(target_directory="/home/mrdr/Desktop/move_test")
