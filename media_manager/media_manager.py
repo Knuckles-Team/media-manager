@@ -116,6 +116,12 @@ class MediaManager:
             current_title_metadata = ffmpeg.probe(new_media_file_path)['format']['tags']['title']
             if current_title_metadata != new_file_name:
                 if subtitle:
+                    subtitle_file = "English.srt"
+                    for file in os.listdir(f"{parent_directory}/{self.folder_name}/Subs"):
+                        if file.endswith("English.srt"):
+                            subtitle_files.append(os.path.join(directory, file))
+                            print(os.path.join(f"{parent_directory}/{self.folder_name}/Subs", file))
+                            subtitle_file = subtitle_files[0]
                     ffmpeg.input(new_media_file_path, srt=subtitle_file, langauage='eng').output(temporary_media_file_path, metadata=f"title={new_file_name}", map_metadata=0, map=0, codec="copy", srt=subtitle_file, langauage='eng').overwrite_output().run()
                 else:
                     ffmpeg.input(new_media_file_path).output(temporary_media_file_path, metadata=f"title={new_file_name}", map_metadata=0, map=0, codec="copy").overwrite_output().run()
