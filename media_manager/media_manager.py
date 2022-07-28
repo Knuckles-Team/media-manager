@@ -143,6 +143,8 @@ class MediaManager:
                 self.media_files.append(os.path.join(file))
                 self.media_file_directories.append(os.path.dirname(file))
                 self.media_file_directories = [*set(self.media_file_directories)]
+            elif file.endswith(".nfo") or file.endswith(".txt"):
+                os.remove(file)
 
     def clean_subtitle_directory(self, subtitle_directory):
         subtitle_directories = glob.glob(f"{subtitle_directory}/*/", recursive = True)
