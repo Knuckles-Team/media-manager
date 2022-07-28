@@ -122,7 +122,6 @@ class MediaManager:
             # Check if media metadata title is the same as what is proposed
             current_title_metadata = ffmpeg.probe(new_media_file_path)['format']['tags']['title']
             if current_title_metadata != new_file_name or subtitle is True:
-                print("Attempt adding subs")
                 subtitle_file = "English.srt"
                 subtitle_files = []
                 if series:
@@ -135,13 +134,11 @@ class MediaManager:
                     for file in os.listdir(f"{subtitle_directories[matching_video]}"):
                         if file.endswith("English.srt"):
                             subtitle_files.append(os.path.join(subtitle_directories[matching_video], file))
-                            print(os.path.join(subtitle_directories[matching_video], file))
                             subtitle_file = subtitle_files[0]
                 else:
                     for file in os.listdir(f"{parent_directory}/{self.folder_name}/Subs"):
                         if file.endswith("English.srt"):
                             subtitle_files.append(os.path.join(directory, file))
-                            print(os.path.join(f"{parent_directory}/{self.folder_name}/Subs", file))
                             subtitle_file = subtitle_files[0]
                 if file_extension == ".mkv":
                     scodec = "srt"
@@ -149,24 +146,32 @@ class MediaManager:
                     scodec = "mov_text"
                 else:
                     scodec = "srt"
-                input_ffmpeg = ffmpeg.input(new_media_file_path)
-                input_ffmpeg_subtitle = ffmpeg.input(subtitle_file)
-                input_subtitles = input_ffmpeg_subtitle['s']
-                ffmpeg.output(
-                    input_ffmpeg['v'], input_ffmpeg['a'], input_subtitles, temporary_media_file_path,
-                    vcodec='copy', acodec='copy', metadata=f"title={new_file_name}", scodec=scodec,
-                    **{'metadata:s:s:0': "language=" + "en", 'metadata:s:s:0': "title=" + "English",
-                       'metadata:s:s:1': "language=" + "sp", 'metadata:s:s:1': "title=" + "Spanish"}
-                ).overwrite_output().run()
-                os.remove(new_media_file_path)
-                os.rename(temporary_media_file_path, new_media_file_path)
+
+                subtitle_exists = False
+                for stream in ffmpeg.probe(new_media_file_path)['streams']:
+                    if "subtitle" in stream['codec_type']:
+                        subtitle_exists = True
+
+                if not subtitle_exists:
+                    input_ffmpeg = ffmpeg.input(new_media_file_path)
+                    input_ffmpeg_subtitle = ffmpeg.input(subtitle_file)
+                    input_subtitles = input_ffmpeg_subtitle['s']
+                    ffmpeg.output(
+                        input_ffmpeg['v'], input_ffmpeg['a'], input_subtitles, temporary_media_file_path,
+                        vcodec='copy', acodec='copy', scodec=scodec,
+                        **{'metadata:g:0': f"title={new_file_name}", 'metadata:g:1': f"comment={new_file_name}",
+                           'metadata:s:s:0': "language=" + "en", 'metadata:s:s:0': "title=" + "English",
+                           'metadata:s:s:1': "language=" + "sp", 'metadata:s:s:1': "title=" + "Spanish"}
+                    ).overwrite_output().run()
+                    os.remove(new_media_file_path)
+                    os.rename(temporary_media_file_path, new_media_file_path)
                 media_file_index += 1
             elif current_title_metadata != new_file_name and subtitle is False:
                 ffmpeg.input(new_media_file_path) \
                     .output(temporary_media_file_path,
-                             metadata=f"title={new_file_name}",
-                             map_metadata=0,
-                             map=0, codec="copy") \
+                            map_metadata=0,
+                            map=0, codec="copy",
+                            **{'metadata:g:0': f"title={new_file_name}", 'metadata:g:1': f"comment={new_file_name}"}) \
                     .overwrite_output() \
                     .run()
                 os.remove(new_media_file_path)
@@ -267,4 +272,3 @@ def main():
 
 if __name__ == "__main__":
     media_manager(sys.argv[1:])
-
