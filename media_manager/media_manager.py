@@ -123,6 +123,8 @@ class MediaManager:
                         print(f"\n\nSUBTITLE FOLDERS: {subtitles}")
                         for subtitle_directory in subtitles:
                             shutil.move(f"{subtitle_directory}", f"{parent_directory}/{self.folder_name}/Subs")
+                        os.rmdir(f"{directory}/Subs")
+                        os.rmdir(f"{directory}")
                     self.find_media(directory=f"{parent_directory}")
                 else:
                     os.rename(f"{directory}", f"{parent_directory}/{self.folder_name}")
@@ -131,6 +133,8 @@ class MediaManager:
             new_media_file_path = f"{parent_directory}/{self.folder_name}/{new_file_name}{file_extension}"
             temporary_media_file_path = f"{parent_directory}/{self.folder_name}/temp-{new_file_name}{file_extension}"
             # Check if media file name is the same as what is proposed
+            file_name, file_extension = os.path.splitext(media_file)
+            print("\n\n\nFILE NAME", file_name)
             if f"{parent_directory}/{self.folder_name}/{file_name}{file_extension}" != f"{new_media_file_path}":
                 os.rename(f"{parent_directory}/{self.folder_name}/{file_name}{file_extension}", new_media_file_path)
                 media_file_index = 0
@@ -212,6 +216,7 @@ class MediaManager:
             elif file.endswith(".nfo") or file.endswith(".txt"):
                 os.remove(file)
         self.media_files.sort()
+        print(f"FILES: {self.media_files}")
 
     def clean_subtitle_directory(self, subtitle_directory):
         subtitle_directories = glob.glob(f"{subtitle_directory}/*/", recursive = True)
