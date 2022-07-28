@@ -82,7 +82,9 @@ class MediaManager:
 
     def clean_media(self, subtitle=False):
         # Iterate through all media files found
-        for media_file_index in range(0, len(self.media_files)):
+        media_file_index = 0
+        while media_file_index < len(self.media_files):
+            print(f"Validating: {self.media_files[media_file_index]}")
             directory = os.path.dirname(self.media_files[media_file_index])
             media_file = os.path.basename(self.media_files[media_file_index])
             file_name, file_extension = os.path.splitext(media_file)
@@ -107,12 +109,14 @@ class MediaManager:
             # Check if media folder name is the same as what is proposed
             if f"{directory}" != f"{parent_directory}/{self.folder_name}":
                 os.rename(f"{directory}", f"{parent_directory}/{self.folder_name}")
+                media_file_index = 0
             # Rename file
             new_media_file_path = f"{parent_directory}/{self.folder_name}/{new_file_name}{file_extension}"
             temporary_media_file_path = f"{parent_directory}/{self.folder_name}/temp-{new_file_name}{file_extension}"
             # Check if media file name is the same as what is proposed
             if f"{parent_directory}/{self.folder_name}/{file_name}{file_extension}" != f"{new_media_file_path}":
                 os.rename(f"{parent_directory}/{self.folder_name}/{file_name}{file_extension}", new_media_file_path)
+                media_file_index = 0
             # Check if media metadata title is the same as what is proposed
             current_title_metadata = ffmpeg.probe(new_media_file_path)['format']['tags']['title']
             if current_title_metadata != new_file_name:
@@ -128,6 +132,9 @@ class MediaManager:
                     ffmpeg.input(new_media_file_path).output(temporary_media_file_path, metadata=f"title={new_file_name}", map_metadata=0, map=0, codec="copy").overwrite_output().run()
                 os.remove(new_media_file_path)
                 os.rename(temporary_media_file_path, new_media_file_path)
+                media_file_index = 0
+            else:
+                media_file_index += 1
             # Rediscover cleaned media
             self.find_media(directory=f"{parent_directory}")
             # Clean Subtitle directories
@@ -145,6 +152,7 @@ class MediaManager:
                 self.media_file_directories = [*set(self.media_file_directories)]
             elif file.endswith(".nfo") or file.endswith(".txt"):
                 os.remove(file)
+        self.media_files.sort()
 
     def clean_subtitle_directory(self, subtitle_directory):
         subtitle_directories = glob.glob(f"{subtitle_directory}/*/", recursive = True)
