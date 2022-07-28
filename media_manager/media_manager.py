@@ -79,7 +79,7 @@ class MediaManager:
             r" - -": " -",
         }
 
-    def clean_media(self):
+    def clean_media(self, subtitle=False):
         # Iterate through all media files found
         for media_file_index in range(0, len(self.media_files)):
             directory = os.path.dirname(self.media_files[media_file_index])
@@ -115,7 +115,11 @@ class MediaManager:
             # Check if media metadata title is the same as what is proposed
             current_title_metadata = ffmpeg.probe(new_media_file_path)['format']['tags']['title']
             if current_title_metadata != new_file_name:
-                ffmpeg.input(new_media_file_path).output(temporary_media_file_path, metadata=f"title={new_file_name}", map_metadata=0, map=0, codec="copy").overwrite_output().run()
+                if subtitle:
+                    ffmpeg.input(new_media_file_path, srt=subtitle_file, langauage='eng').output(temporary_media_file_path, metadata=f"title={new_file_name}", map_metadata=0, map=0, codec="copy", srt=subtitle_file, langauage='eng').overwrite_output().run()
+                else:
+                    ffmpeg.input(new_media_file_path).output(temporary_media_file_path, metadata=f"title={new_file_name}", map_metadata=0, map=0, codec="copy").overwrite_output().run()
+
                 os.remove(new_media_file_path)
                 os.rename(temporary_media_file_path, new_media_file_path)
             # Rediscover cleaned media
@@ -141,24 +145,15 @@ class MediaManager:
         else:
             print(f"Directory {target_directory} does not exist")
 
-    def subtitle_manager(self, media_file, subtitle_file):
-        ffmpeg.input(media_file, srt=subtitle_file, langauage='eng', format='rawvideo', pix_fmt='rgb24', s='{}x{}'.format(width, height)).output(out_filename, pix_fmt='yuv420p').overwrite_output()
-
-        """
-        # MP4
-        ffmpeg -i "${file}" -f srt -i "${subtitle_files[0]}" -c:v copy -c:a copy -c:s mov_text -metadata:s:s:0 language=eng "${file::-4}-output.${file_type}"
-        # MKV
-        ffmpeg -i "${file}" -f srt -i "${subtitle_files[0]}" -c:v copy -c:a copy -c:s srt -metadata:s:s:0 language=eng "${file::-4}-output.${file_type}"
-        """
-
 
 def media_manager(argv):
     media_manager_instance = MediaManager()
     move_flag = False
+    subtitle_flag = False
     move_directory = "~/Downloads"
     media_directory = "~/Downloads"
     try:
-        opts, args = getopt.getopt(argv, "hd:m:", ["help", "move=",  "directory="])
+        opts, args = getopt.getopt(argv, "hd:m:s", ["help", "move=",  "directory=", "subtitle"])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
@@ -171,9 +166,11 @@ def media_manager(argv):
         elif opt in ("-m", "--move"):
             move_flag = True
             move_directory = arg
+        elif opt in ("-s", "--subtitle"):
+            subtitle_flag = True
 
     media_manager_instance.find_media(directory=media_directory)
-    media_manager_instance.clean_media()
+    media_manager_instance.clean_media(subtitle=subtitle_flag)
 
     if move_flag:
         media_manager_instance.move_media(target_directory=move_directory)
@@ -184,6 +181,7 @@ def usage():
           f'-h | --help      [ See usage ]\n'
           f'-d | --directory [ Directory to scan for media ]\n'
           f'-m | --move      [ Directory to move media folders ]\n'
+          f'-s | --subtitle  [ Apply subtitle ]\n'
           f'\n'
           f'media-manager -d "~/Downloads" -m "~/User/Media"\n')
 
