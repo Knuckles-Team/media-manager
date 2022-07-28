@@ -139,6 +139,12 @@ class MediaManager:
                 self.media_file_directories = [*set(self.media_file_directories)]
                 print(os.path.join(directory, file))
 
+    def get_media_list(self):
+        return self.media_files
+
+    def get_media_directory_list(self):
+        return self.media_file_directories
+
     def reset_media_list(self):
         self.media_files = []
         self.media_file_directories = []
