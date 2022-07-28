@@ -8,6 +8,7 @@ import getopt
 import requests
 import ffmpeg
 import shutil
+import glob
 
 
 class MediaManager:
@@ -128,16 +129,32 @@ class MediaManager:
                 os.remove(new_media_file_path)
                 os.rename(temporary_media_file_path, new_media_file_path)
             # Rediscover cleaned media
-            self.find_media(directory=f"{parent_directory}/{self.folder_name}")
+            print("Parent Directory", parent_directory)
+            self.find_media(directory=f"{parent_directory}")
+            # Clean Subtitle directories
+            self.clean_subtitle_directory(subtitle_directory=f"{parent_directory}/{self.folder_name}/Subs")
 
     def find_media(self, directory):
         self.reset_media_list()
-        for file in os.listdir(directory):
+        files = glob.glob(f"{directory}/*", recursive = True)
+        files = files + glob.glob(f"{directory}/*/*", recursive = True)
+        for file in files:
             if file.endswith(".mp4") or file.endswith(".mkv"):
-                self.media_files.append(os.path.join(directory, file))
-                self.media_file_directories.append(os.path.dirname(os.path.join(directory, file)))
+                self.media_files.append(os.path.join(file))
+                self.media_file_directories.append(os.path.dirname(file))
                 self.media_file_directories = [*set(self.media_file_directories)]
-                print(os.path.join(directory, file))
+
+    def clean_subtitle_directory(self, subtitle_directory):
+        subtitle_directories = glob.glob(f"{subtitle_directory}/*/", recursive = True)
+        for subtitle_directory_index in range(0, len(subtitle_directories)):
+            subtitle_parent_directory = os.path.dirname(os.path.normpath(subtitle_directories[subtitle_directory_index]))
+            subtitle_directory = os.path.basename(os.path.normpath(subtitle_directories[subtitle_directory_index]))
+            if os.path.isdir(subtitle_directories[subtitle_directory_index]):
+                new_folder_name = subtitle_directory
+                for key in self.series_filters:
+                    new_folder_name = re.sub(str(key), str(self.series_filters[key]), new_folder_name)
+                if new_folder_name != subtitle_directory:
+                    os.rename(subtitle_directories[subtitle_directory_index], f"{subtitle_parent_directory}/{new_folder_name}")
 
     def get_media_list(self):
         return self.media_files
