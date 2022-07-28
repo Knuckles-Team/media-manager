@@ -152,24 +152,6 @@ class MediaManager:
                     **{'metadata:s:s:0': "language=" + "en", 'metadata:s:s:0': "title=" + "English",
                        'metadata:s:s:1': "language=" + "sp", 'metadata:s:s:1': "title=" + "Spanish"}
                 ).overwrite_output().run()
-
-                # video = ffmpeg.input(new_media_file_path)
-                # audio = video.audio
-                # ffmpeg.concat(video.filter("subtitles", subtitle_file), audio, v=1, a=1) \
-                #     .output(temporary_media_file_path,
-                #             metadata=f"title={new_file_name}") \
-                #     .overwrite_output() \
-                #     .run()
-
-                # ffmpeg.input(new_media_file_path)\
-                #     .filter("subtitles", subtitle_file)\
-                #     .output(temporary_media_file_path,
-                #             metadata=f"title={new_file_name}",
-                #             vcodec='copy',
-                #             acodec='copy',
-                #             scodec='mov_text')\
-                #     .overwrite_output()\
-                #     .run()
                 os.remove(new_media_file_path)
                 os.rename(temporary_media_file_path, new_media_file_path)
                 media_file_index += 1
