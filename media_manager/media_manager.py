@@ -139,7 +139,18 @@ class MediaManager:
             self.clean_subtitle_directory(subtitle_directory=f"{parent_directory}/{self.folder_name}/Subs")
             # Check if media metadata title is the same as what is proposed
             current_title_metadata = ffmpeg.probe(new_media_file_path)['format']['tags']['title']
-            if current_title_metadata != new_file_name or subtitle is True:
+            if current_title_metadata != new_file_name and subtitle is False:
+                ffmpeg.input(new_media_file_path) \
+                    .output(temporary_media_file_path,
+                            map_metadata=0,
+                            map=0, codec="copy",
+                            **{'metadata:g:0': f"title={new_file_name}", 'metadata:g:1': f"comment={new_file_name}"}) \
+                    .overwrite_output() \
+                    .run()
+                os.remove(new_media_file_path)
+                os.rename(temporary_media_file_path, new_media_file_path)
+                media_file_index = 0
+            elif current_title_metadata != new_file_name or subtitle is True:
                 subtitle_file = "English.srt"
                 subtitle_files = []
                 if series:
@@ -184,17 +195,6 @@ class MediaManager:
                     os.remove(new_media_file_path)
                     os.rename(temporary_media_file_path, new_media_file_path)
                 media_file_index += 1
-            elif current_title_metadata != new_file_name and subtitle is False:
-                ffmpeg.input(new_media_file_path) \
-                    .output(temporary_media_file_path,
-                            map_metadata=0,
-                            map=0, codec="copy",
-                            **{'metadata:g:0': f"title={new_file_name}", 'metadata:g:1': f"comment={new_file_name}"}) \
-                    .overwrite_output() \
-                    .run()
-                os.remove(new_media_file_path)
-                os.rename(temporary_media_file_path, new_media_file_path)
-                media_file_index = 0
             else:
                 media_file_index += 1
             # Rediscover cleaned media
