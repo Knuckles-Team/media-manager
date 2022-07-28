@@ -122,7 +122,7 @@ class MediaManager:
                             shutil.move(f"{subtitle_directory}", f"{parent_directory}/{self.folder_name}/Subs")
                         os.rmdir(f"{directory}/Subs")
                         os.rmdir(f"{directory}")
-                    self.find_media(directory=f"{parent_directory}")
+                    self.find_media(directory=f"{parent_directory}/{self.folder_name}")
                 else:
                     os.rename(f"{directory}", f"{parent_directory}/{self.folder_name}")
                 media_file_index = 0
@@ -197,7 +197,7 @@ class MediaManager:
             else:
                 media_file_index += 1
             # Rediscover cleaned media
-            self.find_media(directory=f"{parent_directory}")
+            self.find_media(directory=f"{parent_directory}/{self.folder_name}")
 
     def find_media(self, directory):
         self.reset_media_list()
@@ -212,6 +212,8 @@ class MediaManager:
             elif file.endswith(".nfo") or file.endswith(".txt"):
                 os.remove(file)
         self.media_files.sort()
+        print(f"DIRECTORY USED: {directory}")
+        #print(f"FILES FOUND: {files} DIRECTORY USED: {directory}")
 
     def clean_subtitle_directory(self, subtitle_directory):
         subtitle_directories = glob.glob(f"{subtitle_directory}/*/", recursive = True)
