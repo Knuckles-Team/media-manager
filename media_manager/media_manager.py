@@ -125,7 +125,6 @@ class MediaManager:
                     ffmpeg.input(new_media_file_path, srt=subtitle_file, langauage='eng').output(temporary_media_file_path, metadata=f"title={new_file_name}", map_metadata=0, map=0, codec="copy", srt=subtitle_file, langauage='eng').overwrite_output().run()
                 else:
                     ffmpeg.input(new_media_file_path).output(temporary_media_file_path, metadata=f"title={new_file_name}", map_metadata=0, map=0, codec="copy").overwrite_output().run()
-
                 os.remove(new_media_file_path)
                 os.rename(temporary_media_file_path, new_media_file_path)
             # Rediscover cleaned media
