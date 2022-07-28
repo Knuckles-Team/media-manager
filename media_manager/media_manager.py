@@ -117,19 +117,70 @@ class MediaManager:
             if f"{parent_directory}/{self.folder_name}/{file_name}{file_extension}" != f"{new_media_file_path}":
                 os.rename(f"{parent_directory}/{self.folder_name}/{file_name}{file_extension}", new_media_file_path)
                 media_file_index = 0
+            # Clean Subtitle directories
+            self.clean_subtitle_directory(subtitle_directory=f"{parent_directory}/{self.folder_name}/Subs")
             # Check if media metadata title is the same as what is proposed
             current_title_metadata = ffmpeg.probe(new_media_file_path)['format']['tags']['title']
-            if current_title_metadata != new_file_name:
-                if subtitle:
-                    subtitle_file = "English.srt"
+            if current_title_metadata != new_file_name or subtitle is True:
+                print("Attempt adding subs")
+                subtitle_file = "English.srt"
+                subtitle_files = []
+                if series:
+                    matching_video = 0
+                    subtitle_directories = glob.glob(f"{parent_directory}/{self.folder_name}/Subs/*/", recursive=True)
+                    subtitle_directories.sort()
+                    for subtitle_directory_index in range(0, len(subtitle_directories)):
+                        if new_file_name in subtitle_directories[subtitle_directory_index]:
+                            matching_video = subtitle_directory_index
+                    for file in os.listdir(f"{subtitle_directories[matching_video]}"):
+                        if file.endswith("English.srt"):
+                            subtitle_files.append(os.path.join(subtitle_directories[matching_video], file))
+                            print(os.path.join(subtitle_directories[matching_video], file))
+                            subtitle_file = subtitle_files[0]
+                else:
                     for file in os.listdir(f"{parent_directory}/{self.folder_name}/Subs"):
                         if file.endswith("English.srt"):
                             subtitle_files.append(os.path.join(directory, file))
                             print(os.path.join(f"{parent_directory}/{self.folder_name}/Subs", file))
                             subtitle_file = subtitle_files[0]
-                    ffmpeg.input(new_media_file_path, srt=subtitle_file, langauage='eng').output(temporary_media_file_path, metadata=f"title={new_file_name}", map_metadata=0, map=0, codec="copy", srt=subtitle_file, langauage='eng').overwrite_output().run()
-                else:
-                    ffmpeg.input(new_media_file_path).output(temporary_media_file_path, metadata=f"title={new_file_name}", map_metadata=0, map=0, codec="copy").overwrite_output().run()
+                input_ffmpeg = ffmpeg.input(new_media_file_path)
+                input_ffmpeg_subtitle = ffmpeg.input(subtitle_file)
+                input_subtitles = input_ffmpeg_subtitle['s']
+                ffmpeg.output(
+                    input_ffmpeg['v'], input_ffmpeg['a'], input_subtitles, temporary_media_file_path,
+                    vcodec='copy', acodec='copy', metadata=f"title={new_file_name}", scodec='mov_text',
+                    **{'metadata:s:s:0': "language=" + "en", 'metadata:s:s:0': "title=" + "English",
+                       'metadata:s:s:1': "language=" + "sp", 'metadata:s:s:1': "title=" + "Spanish"}
+                ).overwrite_output().run()
+
+                # video = ffmpeg.input(new_media_file_path)
+                # audio = video.audio
+                # ffmpeg.concat(video.filter("subtitles", subtitle_file), audio, v=1, a=1) \
+                #     .output(temporary_media_file_path,
+                #             metadata=f"title={new_file_name}") \
+                #     .overwrite_output() \
+                #     .run()
+
+                # ffmpeg.input(new_media_file_path)\
+                #     .filter("subtitles", subtitle_file)\
+                #     .output(temporary_media_file_path,
+                #             metadata=f"title={new_file_name}",
+                #             vcodec='copy',
+                #             acodec='copy',
+                #             scodec='mov_text')\
+                #     .overwrite_output()\
+                #     .run()
+                os.remove(new_media_file_path)
+                os.rename(temporary_media_file_path, new_media_file_path)
+                media_file_index += 1
+            elif current_title_metadata != new_file_name and subtitle is False:
+                ffmpeg.input(new_media_file_path) \
+                    .output(temporary_media_file_path,
+                             metadata=f"title={new_file_name}",
+                             map_metadata=0,
+                             map=0, codec="copy") \
+                    .overwrite_output() \
+                    .run()
                 os.remove(new_media_file_path)
                 os.rename(temporary_media_file_path, new_media_file_path)
                 media_file_index = 0
@@ -137,8 +188,6 @@ class MediaManager:
                 media_file_index += 1
             # Rediscover cleaned media
             self.find_media(directory=f"{parent_directory}")
-            # Clean Subtitle directories
-            self.clean_subtitle_directory(subtitle_directory=f"{parent_directory}/{self.folder_name}/Subs")
 
     def find_media(self, directory):
         self.reset_media_list()
