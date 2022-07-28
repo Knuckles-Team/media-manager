@@ -129,7 +129,6 @@ class MediaManager:
                 os.remove(new_media_file_path)
                 os.rename(temporary_media_file_path, new_media_file_path)
             # Rediscover cleaned media
-            print("Parent Directory", parent_directory)
             self.find_media(directory=f"{parent_directory}")
             # Clean Subtitle directories
             self.clean_subtitle_directory(subtitle_directory=f"{parent_directory}/{self.folder_name}/Subs")
@@ -138,6 +137,7 @@ class MediaManager:
         self.reset_media_list()
         files = glob.glob(f"{directory}/*", recursive = True)
         files = files + glob.glob(f"{directory}/*/*", recursive = True)
+        files = files + glob.glob(f"{directory}/*/*/*", recursive=True)
         for file in files:
             if file.endswith(".mp4") or file.endswith(".mkv"):
                 self.media_files.append(os.path.join(file))
