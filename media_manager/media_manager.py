@@ -143,12 +143,18 @@ class MediaManager:
                             subtitle_files.append(os.path.join(directory, file))
                             print(os.path.join(f"{parent_directory}/{self.folder_name}/Subs", file))
                             subtitle_file = subtitle_files[0]
+                if file_extension == ".mkv":
+                    scodec = "srt"
+                elif file_extension == ".mp4":
+                    scodec = "mov_text"
+                else:
+                    scodec = "srt"
                 input_ffmpeg = ffmpeg.input(new_media_file_path)
                 input_ffmpeg_subtitle = ffmpeg.input(subtitle_file)
                 input_subtitles = input_ffmpeg_subtitle['s']
                 ffmpeg.output(
                     input_ffmpeg['v'], input_ffmpeg['a'], input_subtitles, temporary_media_file_path,
-                    vcodec='copy', acodec='copy', metadata=f"title={new_file_name}", scodec='mov_text',
+                    vcodec='copy', acodec='copy', metadata=f"title={new_file_name}", scodec=scodec,
                     **{'metadata:s:s:0': "language=" + "en", 'metadata:s:s:0': "title=" + "English",
                        'metadata:s:s:1': "language=" + "sp", 'metadata:s:s:1': "title=" + "Spanish"}
                 ).overwrite_output().run()
