@@ -16,6 +16,7 @@ class MediaManager:
     def __init__(self):
         self.media_files = []
         self.media_file_directories = []
+        self.media_directory = ""
         self.folder_name = ""
         self.movie_filters = {
             f"2160p.*$": f"2160p",
@@ -122,7 +123,7 @@ class MediaManager:
                             shutil.move(f"{subtitle_directory}", f"{parent_directory}/{self.folder_name}/Subs")
                         os.rmdir(f"{directory}/Subs")
                         os.rmdir(f"{directory}")
-                    self.find_media(directory=f"{parent_directory}/{self.folder_name}")
+                    self.find_media()
                 else:
                     os.rename(f"{directory}", f"{parent_directory}/{self.folder_name}")
                 media_file_index = 0
@@ -197,13 +198,13 @@ class MediaManager:
             else:
                 media_file_index += 1
             # Rediscover cleaned media
-            self.find_media(directory=f"{parent_directory}/{self.folder_name}")
+            self.find_media()
 
-    def find_media(self, directory):
+    def find_media(self):
         self.reset_media_list()
-        files = glob.glob(f"{directory}/*", recursive = True)
-        files = files + glob.glob(f"{directory}/*/*", recursive = True)
-        files = files + glob.glob(f"{directory}/*/*/*", recursive=True)
+        files = glob.glob(f"{self.media_directory}/*", recursive = True)
+        files = files + glob.glob(f"{self.media_directory}/*/*", recursive = True)
+        files = files + glob.glob(f"{self.media_directory}/*/*/*", recursive=True)
         for file in files:
             if file.endswith(".mp4") or file.endswith(".mkv"):
                 self.media_files.append(os.path.join(file))
@@ -212,8 +213,8 @@ class MediaManager:
             elif file.endswith(".nfo") or file.endswith(".txt"):
                 os.remove(file)
         self.media_files.sort()
-        print(f"DIRECTORY USED: {directory}")
-        #print(f"FILES FOUND: {files} DIRECTORY USED: {directory}")
+        print(f"DIRECTORY USED: {self.media_directory}")
+        print(f"FILES FOUND: {self.media_files}")
 
     def clean_subtitle_directory(self, subtitle_directory):
         subtitle_directories = glob.glob(f"{subtitle_directory}/*/", recursive = True)
@@ -226,6 +227,9 @@ class MediaManager:
                     new_folder_name = re.sub(str(key), str(self.series_filters[key]), new_folder_name)
                 if new_folder_name != subtitle_directory:
                     os.rename(subtitle_directories[subtitle_directory_index], f"{subtitle_parent_directory}/{new_folder_name}")
+
+    def set_media_directory(self, media_directory):
+        self.media_directory = media_directory
 
     def get_media_list(self):
         return self.media_files
@@ -268,7 +272,8 @@ def media_manager(argv):
         elif opt in ("-s", "--subtitle"):
             subtitle_flag = True
 
-    media_manager_instance.find_media(directory=media_directory)
+    media_manager_instance.set_media_directory(media_directory=media_directory)
+    media_manager_instance.find_media()
     media_manager_instance.clean_media(subtitle=subtitle_flag)
 
     if move_flag:
