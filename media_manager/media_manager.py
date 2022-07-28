@@ -143,7 +143,7 @@ class MediaManager:
                 ffmpeg.input(new_media_file_path) \
                     .output(temporary_media_file_path,
                             map_metadata=0,
-                            map=0, codec="copy",
+                            map=0, vcodec='copy', acodec='copy',
                             **{'metadata:g:0': f"title={new_file_name}", 'metadata:g:1': f"comment={new_file_name}"}) \
                     .overwrite_output() \
                     .run()
