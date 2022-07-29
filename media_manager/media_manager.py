@@ -153,7 +153,7 @@ class MediaManager:
             elif current_title_metadata != new_file_name or subtitle is True:
                 subtitle_file = "English.srt"
                 subtitle_files = []
-                if series:
+                if series and os.path.isdir(f"{parent_directory}/{self.folder_name}/Subs"):
                     matching_video = 0
                     subtitle_directories = glob.glob(f"{parent_directory}/{self.folder_name}/Subs/*/", recursive=True)
                     subtitle_directories.sort()
@@ -164,7 +164,7 @@ class MediaManager:
                         if file.endswith("English.srt"):
                             subtitle_files.append(os.path.join(subtitle_directories[matching_video], file))
                             subtitle_file = subtitle_files[0]
-                else:
+                elif os.path.isdir(f"{parent_directory}/{self.folder_name}/Subs"):
                     for file in os.listdir(f"{parent_directory}/{self.folder_name}/Subs"):
                         if file.endswith("English.srt"):
                             subtitle_files.append(os.path.join(directory, file))
