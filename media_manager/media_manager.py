@@ -213,8 +213,6 @@ class MediaManager:
             elif file.endswith(".nfo") or file.endswith(".txt"):
                 os.remove(file)
         self.media_files.sort()
-        print(f"DIRECTORY USED: {self.media_directory}")
-        print(f"FILES FOUND: {self.media_files}")
 
     def clean_subtitle_directory(self, subtitle_directory):
         subtitle_directories = glob.glob(f"{subtitle_directory}/*/", recursive = True)
