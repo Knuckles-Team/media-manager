@@ -13,7 +13,7 @@ readme = re.sub(r"Version: [0-9]*\.[0-9]*\.[0-9][0-9]*", f"Version: {version}", 
 print(f"README: {readme}")
 with open("README.md", "w") as readme_file:
     readme_file.write(readme)
-description = 'Download audio/videos from the internet!'
+description = 'Manage your media!'
 
 setup(
     name='media-manager',
