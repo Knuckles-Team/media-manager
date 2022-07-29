@@ -283,9 +283,9 @@ def usage():
           f'-h | --help      [ See usage ]\n'
           f'-d | --directory [ Directory to scan for media ]\n'
           f'-m | --move      [ Directory to move media folders ]\n'
-          f'-s | --subtitle  [ Apply subtitle ]\n'
+          f'-s | --subtitle  [ Apply subtitle in media Sub folder ]\n'
           f'\n'
-          f'media-manager -d "~/Downloads" -m "~/User/Media"\n')
+          f'media-manager -d "~/Downloads" -m "~/User/Media -s"\n')
 
 
 def main():
