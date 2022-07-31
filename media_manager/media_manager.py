@@ -138,7 +138,10 @@ class MediaManager:
             # Clean Subtitle directories
             self.clean_subtitle_directory(subtitle_directory=f"{parent_directory}/{self.folder_name}/Subs")
             # Check if media metadata title is the same as what is proposed
-            current_title_metadata = ffmpeg.probe(new_media_file_path)['format']['tags']['title']
+            if "title" in ffmpeg.probe(new_media_file_path)['format']['tags']:
+                current_title_metadata = ffmpeg.probe(new_media_file_path)['format']['tags']['title']
+            else:
+                current_title_metadata = ""
             if current_title_metadata != new_file_name and subtitle is False:
                 ffmpeg.input(new_media_file_path) \
                     .output(temporary_media_file_path,
