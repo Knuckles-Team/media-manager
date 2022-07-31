@@ -213,7 +213,7 @@ class MediaManager:
                 self.media_files.append(os.path.join(file))
                 self.media_file_directories.append(os.path.dirname(file))
                 self.media_file_directories = [*set(self.media_file_directories)]
-            elif file.endswith(".nfo") or file.endswith(".txt"):
+            elif file.endswith(".nfo") or file.endswith(".txt") or file.endswith(".exe"):
                 os.remove(file)
         self.media_files.sort()
 
