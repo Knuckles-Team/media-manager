@@ -7,6 +7,10 @@ Manage your media
 - Apply subtitles in media's "Sub" directory automatically
 - Move media to desired destination
 
+Supports Media:
+- MKV
+- MP4
+
 ### Usage:
 | Short Flag | Long Flag   | Description                                 |
 |------------|-------------|---------------------------------------------|
