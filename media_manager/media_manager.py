@@ -170,7 +170,7 @@ class MediaManager:
                 elif os.path.isdir(f"{parent_directory}/{self.folder_name}/Subs"):
                     for file in os.listdir(f"{parent_directory}/{self.folder_name}/Subs"):
                         if file.endswith("English.srt"):
-                            subtitle_files.append(os.path.join(directory, file))
+                            subtitle_files.append(os.path.join(f"{parent_directory}/{self.folder_name}/Subs", file))
                             subtitle_file = subtitle_files[0]
                 if file_extension == ".mkv":
                     scodec = "srt"
