@@ -153,7 +153,7 @@ class MediaManager:
                 os.remove(new_media_file_path)
                 os.rename(temporary_media_file_path, new_media_file_path)
                 media_file_index = 0
-            elif current_title_metadata != new_file_name or subtitle is True:
+            elif current_title_metadata != new_file_name and subtitle is True:
                 subtitle_file = "English.srt"
                 subtitle_files = []
                 if series and os.path.isdir(f"{parent_directory}/{self.folder_name}/Subs"):
@@ -164,12 +164,12 @@ class MediaManager:
                         if new_file_name in subtitle_directories[subtitle_directory_index]:
                             matching_video = subtitle_directory_index
                     for file in os.listdir(f"{subtitle_directories[matching_video]}"):
-                        if file.endswith("English.srt"):
+                        if os.path.isfile(file) and (file.endswith("English.srt") or file.endswith("Eng.srt")):
                             subtitle_files.append(os.path.join(subtitle_directories[matching_video], file))
                             subtitle_file = subtitle_files[0]
                 elif os.path.isdir(f"{parent_directory}/{self.folder_name}/Subs"):
                     for file in os.listdir(f"{parent_directory}/{self.folder_name}/Subs"):
-                        if file.endswith("English.srt"):
+                        if os.path.isfile(file) and (file.endswith("English.srt") or file.endswith("Eng.srt")):
                             subtitle_files.append(os.path.join(f"{parent_directory}/{self.folder_name}/Subs", file))
                             subtitle_file = subtitle_files[0]
                 if file_extension == ".mkv":
@@ -184,7 +184,7 @@ class MediaManager:
                     if "subtitle" in stream['codec_type']:
                         subtitle_exists = True
 
-                if not subtitle_exists:
+                if not subtitle_exists and os.path.isfile(subtitle_file):
                     input_ffmpeg = ffmpeg.input(new_media_file_path)
                     input_ffmpeg_subtitle = ffmpeg.input(subtitle_file)
                     input_subtitles = input_ffmpeg_subtitle['s']
@@ -195,6 +195,17 @@ class MediaManager:
                            'metadata:s:s:0': "language=" + "en", 'metadata:s:s:0': "title=" + "English",
                            'metadata:s:s:1': "language=" + "sp", 'metadata:s:s:1': "title=" + "Spanish"}
                     ).overwrite_output().run()
+                    os.remove(new_media_file_path)
+                    os.rename(temporary_media_file_path, new_media_file_path)
+                elif not subtitle_exists and not os.path.isfile(subtitle_file):
+                    ffmpeg.input(new_media_file_path) \
+                        .output(temporary_media_file_path,
+                                map_metadata=0,
+                                map=0, vcodec='copy', acodec='copy',
+                                **{'metadata:g:0': f"title={new_file_name}",
+                                   'metadata:g:1': f"comment={new_file_name}"}) \
+                        .overwrite_output() \
+                        .run()
                     os.remove(new_media_file_path)
                     os.rename(temporary_media_file_path, new_media_file_path)
                 media_file_index += 1
