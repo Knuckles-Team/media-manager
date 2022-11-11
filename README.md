@@ -30,6 +30,13 @@ media-manager -d "/home/User/Downloads" -m "/media/" -s
 #### After
 > /media/The Lion King 1993 1080p/The Lion King 1993 1080p.mp4
 
+#### Install Instructions
+Install Python Package
+
+```bash
+python -m pip install media-manager
+```
+
 #### Build Instructions
 Build Python Package
 
