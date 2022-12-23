@@ -27,7 +27,7 @@ setup(
     license='Unlicense',
     packages=['media_manager'],
     include_package_data=True,
-    install_requires=['ffmpeg-python'],
+    install_requires=['ffmpeg-python>=0.2.0'],
     py_modules=['media_manager'],
     package_data={'media_manager': ['media_manager']},
     classifiers=[
