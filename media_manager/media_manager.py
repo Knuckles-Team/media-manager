@@ -105,16 +105,10 @@ class MediaManager:
     def get_media_directory_list(self):
         return self.media_file_directories
 
-    # Get folder name for movie or series
-    def get_directory(self):
-        if self.series:
-            self.folder_name = re.sub(" - S[0-9]+E[0-9]+", "", self.new_file_name)
-        else:
-            self.folder_name = self.new_file_name
-
     # Detect if series or a movie
     def media_detection(self):
-
+        self.parent_directory = os.path.dirname(os.path.normpath(self.directory))
+        self.folder_name = os.path.basename(os.path.normpath(self.directory))
         if bool(re.search("S[0-9][0-9]*E[0-9][0-9]*", self.file_name)) \
                 or bool(re.search("s[0-9][0-9]*e[0-9][0-9]*", self.file_name)):
             self.filters = self.series_filters
@@ -130,6 +124,7 @@ class MediaManager:
 
     # Rediscover cleaned media
     def find_media(self):
+        self.media_files = []
         files = glob.glob(f"{self.media_directory}/*", recursive=True)
         files = files + glob.glob(f"{self.media_directory}/*/*", recursive=True)
         files = files + glob.glob(f"{self.media_directory}/*/*/*", recursive=True)
@@ -144,12 +139,13 @@ class MediaManager:
 
     # Rename file
     def rename_file(self):
+        old_file_path = f"{self.parent_directory}/{self.folder_name}/{self.file_name}{self.file_extension}"
         self.new_media_file_path = f"{self.parent_directory}/{self.folder_name}/{self.new_file_name}{self.file_extension}"
         self.temporary_media_file_path = f"{self.parent_directory}/{self.folder_name}/temp-{self.new_file_name}{self.file_extension}"
         # Check if media file name is the same as what is proposed
         self.file_name, self.file_extension = os.path.splitext(self.media_file)
-        if f"{self.parent_directory}/{self.folder_name}/{self.file_name}{self.file_extension}" != f"{self.new_media_file_path}":
-            os.rename(f"{self.parent_directory}/{self.folder_name}/{self.file_name}{self.file_extension}", self.new_media_file_path)
+        if old_file_path != f"{self.new_media_file_path}":
+            os.rename(old_file_path, self.new_media_file_path)
             self.media_file_index = 0
 
     # Clean Subtitle directories
@@ -244,6 +240,10 @@ class MediaManager:
 
     # Rename directory
     def rename_directory(self):
+        if self.series:
+            self.folder_name = re.sub(" - S[0-9]+E[0-9]+", "", self.new_file_name)
+        else:
+            self.folder_name = self.new_file_name
         self.parent_directory = os.path.dirname(os.path.normpath(self.directory))
         # Check if media folder name is the same as what is proposed
         if f"{self.directory}" != f"{self.parent_directory}/{self.folder_name}":
@@ -284,7 +284,6 @@ class MediaManager:
             self.media_file = os.path.basename(self.media_files[self.media_file_index])
             self.file_name, self.file_extension = os.path.splitext(self.media_file)
             self.new_file_name = self.file_name
-            self.get_directory()
             self.media_detection()
             self.clean_file_name()
             self.rename_file()
