@@ -128,6 +128,19 @@ class MediaManager:
             self.parent_directory = os.path.join(self.parent_directory, self.folder_name)
             self.folder_name = self.file_name
             os.makedirs(os.path.join(self.parent_directory, self.folder_name))
+            for file_name in os.listdir(self.directory):
+                # construct full file path
+                source = f"{self.directory}/{file_name}"
+                destination = f"{self.parent_directory}/{self.folder_name}/{file_name}"
+                # move only files
+                if os.path.isfile(source):
+                    shutil.move(source, destination)
+            if os.path.isdir(f"{self.directory}/Subs"):
+                    subtitles = glob.glob(f"{self.directory}/Subs/*/", recursive=True)
+                    for subtitle_directory in subtitles:
+                        shutil.move(f"{subtitle_directory}", f"{self.parent_directory}/{self.folder_name}/Subs")
+                    os.rmdir(f"{self.directory}/Subs")
+                    os.rmdir(f"{self.directory}")     
 
     # Rediscover cleaned media
     def find_media(self):
