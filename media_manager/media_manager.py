@@ -355,7 +355,8 @@ def media_manager(argv):
         elif opt in ("-s", "--subtitle"):
             subtitle_flag = True
 
-    media_manager_instance.set_media_directory(media_directory=source_directory)    
+    media_manager_instance.set_media_directory(media_directory=source_directory) 
+    media_manager_instance.find_media()   
     media_manager_instance.set_subtitle(subtitle=subtitle_flag)
     media_manager_instance.clean_media()
 
