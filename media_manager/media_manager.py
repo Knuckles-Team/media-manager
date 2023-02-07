@@ -283,7 +283,6 @@ class MediaManager:
     # Iterate through all media files found
     def clean_media(self):
         while self.media_file_index < len(self.media_files):
-            print(f"Media Files: {self.media_files}")
             print(f"Validating ({self.media_file_index+1}/{len(self.media_files)}): {self.media_files[self.media_file_index]}\n\n")
             self.directory = os.path.dirname(self.media_files[self.media_file_index])
             self.media_file = os.path.basename(self.media_files[self.media_file_index])
