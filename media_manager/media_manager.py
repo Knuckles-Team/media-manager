@@ -281,8 +281,6 @@ class MediaManager:
     # Iterate through all media files found
     def clean_media(self):
         while self.media_file_index < len(self.media_files):
-            
-            print(f"Media Files: {self.media_files}")
             print(f"Validating ({self.media_file_index+1}/{len(self.media_files)}): {self.media_files[self.media_file_index]}")
             self.directory = os.path.dirname(self.media_files[self.media_file_index])
             self.media_file = os.path.basename(self.media_files[self.media_file_index])
@@ -309,8 +307,6 @@ class MediaManager:
             files = glob.glob(f"{self.media_file_directories[media_directory_index]}/*", recursive=True)
             for file in files:
                 move = False
-                #print(f"Type: {type} - File: {file}")
-
                 if not os.path.exists(file):
                     continue
                 if type == "series" and (bool(re.search("S[0-9][0-9]*E[0-9][0-9]*", file)) \
@@ -320,8 +316,7 @@ class MediaManager:
                 if type == "media" and re.search("S[0-9][0-9]*E[0-9][0-9]*", file) is None \
                     and re.search("s[0-9][0-9]*e[0-9][0-9]*", file) is None:
                     move = True
-                    break  
-                          
+                    break                            
             if move:
                 print(f"Moving ({media_directory_index+1}/{len(self.media_file_directories)}) {self.media_file_directories[media_directory_index]} to {target_directory}")
                 shutil.move(self.media_file_directories[media_directory_index], target_directory)
