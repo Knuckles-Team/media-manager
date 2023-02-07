@@ -268,10 +268,12 @@ class MediaManager:
 
     # Cleanup Variables
     def reset_variables(self):
+        self.media_file = ""
         self.media_file_index = 0
         self.new_file_name = ""
         self.new_media_file_path = ""
         self.temporary_media_file_path = ""
+        self.file_name = ""
         self.file_extension = ""
         self.media_files = []
         self.media_file_directories = []
@@ -279,7 +281,8 @@ class MediaManager:
     # Iterate through all media files found
     def clean_media(self):
         while self.media_file_index < len(self.media_files):
-            print(f"Validating ({self.media_file_index+1}/{len(self.media_files)}): {self.media_files[self.media_file_index]}")
+            print(f"Media Files: {self.media_files}")
+            print(f"Validating ({self.media_file_index+1}/{len(self.media_files)}): {self.media_files[self.media_file_index]}\n\n")
             self.directory = os.path.dirname(self.media_files[self.media_file_index])
             self.media_file = os.path.basename(self.media_files[self.media_file_index])
             self.file_name, self.file_extension = os.path.splitext(self.media_file)
