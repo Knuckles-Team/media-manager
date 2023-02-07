@@ -23,7 +23,7 @@ Supports Media:
 
 ### Example:
 ```bash
-media-manager -d "/home/User/Downloads" -m "/media/" -s
+media-manager -d "/home/User/Downloads" -m "/media/Movies" -t "/media/TV" -s
 ```
 #### Before
 > /home/User/Downloads/The.Lion.King.1993.1080p.[TheBay].YIFY/The.Lion.King.1993.1080p.[TheBay].YIFY.mp4 
