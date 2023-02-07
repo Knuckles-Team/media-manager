@@ -12,12 +12,13 @@ Supports Media:
 - MP4
 
 ### Usage:
-| Short Flag | Long Flag   | Description                                 |
-|------------|-------------|---------------------------------------------|
-| -h         | --help      | See usage                                   |
-| -s         | --subtitle  | Apply Subtitle in local "Sub" directory     |
-| -m         | --move      | Movie media to final destination            |
-| -d         | --directory | Directory to scan for media                 |
+| Short Flag | Long Flag              | Description                                 |
+|------------|------------------------|---------------------------------------------|
+| -h         | --help                 | See usage                                   |
+| -s         | --subtitle             | Apply Subtitle in local "Sub" directory     |
+| -m         | --media-directory      | Move media to directory                     |
+| -t         | --tv-directory         | Move series to directory                    |
+| -d         | --directory            | Directory to scan for media                 |
 
 
 ### Example:
