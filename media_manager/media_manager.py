@@ -144,7 +144,7 @@ class MediaManager:
         self.temporary_media_file_path = f"{self.parent_directory}/{self.folder_name}/temp-{self.new_file_name}{self.file_extension}"
         # Check if media file name is the same as what is proposed
         self.file_name, self.file_extension = os.path.splitext(self.media_file)
-        if old_file_path != f"{self.new_media_file_path}":
+        if old_file_path != f"{self.new_media_file_path}" and os.path.isfile(old_file_path):
             os.rename(old_file_path, self.new_media_file_path)
             self.file_name = self.new_file_name
             self.media_files[self.media_file_index] = self.new_media_file_path            
