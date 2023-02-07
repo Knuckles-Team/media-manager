@@ -370,7 +370,7 @@ def usage():
           f'-t | --tv-directory    [ Directory to move Series ]\n'
           f'-s | --subtitle        [ Apply subtitle in media Sub folder ]\n'
           f'\n'
-          f'media-manager -d "~/Downloads" -m "~/User/Media" -s\n')
+          f'media-manager -d "~/Downloads" -m "~/User/Media/Movies" -t "~/User/Media/TV" -s\n')
 
 
 def main():
