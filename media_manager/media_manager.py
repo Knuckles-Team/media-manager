@@ -147,6 +147,7 @@ class MediaManager:
         if old_file_path != f"{self.new_media_file_path}":
             os.rename(old_file_path, self.new_media_file_path)
             self.file_name = self.new_file_name
+            self.media_files[self.media_file_index] = self.new_media_file_path            
             self.media_file_index = 0
 
     # Clean Subtitle directories
@@ -280,6 +281,7 @@ class MediaManager:
     # Iterate through all media files found
     def clean_media(self):
         while self.media_file_index < len(self.media_files):
+            
             print(f"Media Files: {self.media_files}")
             print(f"Validating ({self.media_file_index+1}/{len(self.media_files)}): {self.media_files[self.media_file_index]}")
             self.directory = os.path.dirname(self.media_files[self.media_file_index])
@@ -353,8 +355,7 @@ def media_manager(argv):
         elif opt in ("-s", "--subtitle"):
             subtitle_flag = True
 
-    media_manager_instance.set_media_directory(media_directory=source_directory)
-    media_manager_instance.find_media()
+    media_manager_instance.set_media_directory(media_directory=source_directory)    
     media_manager_instance.set_subtitle(subtitle=subtitle_flag)
     media_manager_instance.clean_media()
 
