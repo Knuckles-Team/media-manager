@@ -303,7 +303,7 @@ class MediaManager:
     # Iterate through all media files found
     def clean_media(self):
         while self.media_file_index < len(self.media_files):
-            print(f"Validating ({self.media_file_index+1}/{len(self.media_files)}): {self.media_files[self.media_file_index]}\n\n")
+            print(f"Validating ({self.media_file_index+1}/{len(self.media_files)}): {self.media_files[self.media_file_index]}\n")
             self.directory = os.path.dirname(self.media_files[self.media_file_index])
             self.media_file = os.path.basename(self.media_files[self.media_file_index])
             self.file_name, self.file_extension = os.path.splitext(self.media_file)
@@ -322,7 +322,7 @@ class MediaManager:
         if not os.path.isdir(target_directory):
             print(f"Directory {target_directory} does not exist")
             return
-        
+        print(f"Moving {type} to {target_directory}")
         self.find_media()               
         for media_directory_index in range(0, len(self.media_file_directories)):
             # Find if file inside this directory is named as a series
