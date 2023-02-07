@@ -246,7 +246,7 @@ class MediaManager:
             self.folder_name = self.new_file_name
         self.parent_directory = os.path.dirname(os.path.normpath(self.directory))
         # Check if media folder name is the same as what is proposed
-        if f"{self.directory}" != f"{self.parent_directory}/{self.folder_name}":
+        if os.path.join(self.directory) != os.path.join(self.parent_directory, self.folder_name):
             if os.path.isdir(f"{self.parent_directory}/{self.folder_name}"):
                 for file_name in os.listdir(self.directory):
                     # construct full file path
@@ -260,10 +260,10 @@ class MediaManager:
                     for subtitle_directory in subtitles:
                         shutil.move(f"{subtitle_directory}", f"{self.parent_directory}/{self.folder_name}/Subs")
                     os.rmdir(f"{self.directory}/Subs")
-                    os.rmdir(f"{self.directory}")
-                self.find_media()
+                    os.rmdir(f"{self.directory}")                
             else:
-                os.rename(f"{self.directory}", f"{self.parent_directory}/{self.folder_name}")
+                os.rename(f"{self.directory}", f"{self.parent_directory}/{self.folder_name}")            
+            self.find_media()
             self.media_file_index = 0
 
     # Cleanup Variables
@@ -279,7 +279,7 @@ class MediaManager:
     # Iterate through all media files found
     def clean_media(self):
         while self.media_file_index < len(self.media_files):
-            print(f"Validating: {self.media_files[self.media_file_index]}")
+            print(f"Validating ({self.media_file_index+1}/{len(self.media_files)}): {self.media_files[self.media_file_index]}")
             self.directory = os.path.dirname(self.media_files[self.media_file_index])
             self.media_file = os.path.basename(self.media_files[self.media_file_index])
             self.file_name, self.file_extension = os.path.splitext(self.media_file)
