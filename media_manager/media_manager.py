@@ -383,7 +383,8 @@ def media_manager(argv):
         media_manager_instance.move_media(target_directory=tv_directory, type="series")
     if media_flag:
         media_manager_instance.move_media(target_directory=media_directory, type="media")
-    
+    print("Complete!")
+
 
 def usage():
     print(f'Usage:\n'
