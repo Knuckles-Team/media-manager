@@ -144,8 +144,10 @@ class MediaManager:
         self.temporary_media_file_path = f"{self.parent_directory}/{self.folder_name}/temp-{self.new_file_name}{self.file_extension}"
         # Check if media file name is the same as what is proposed
         self.file_name, self.file_extension = os.path.splitext(self.media_file)
-        if old_file_path != f"{self.new_media_file_path}":
+        if old_file_path != f"{self.new_media_file_path}" and os.path.isfile(old_file_path):
             os.rename(old_file_path, self.new_media_file_path)
+            self.file_name = self.new_file_name
+            self.media_files[self.media_file_index] = self.new_media_file_path            
             self.media_file_index = 0
 
     # Clean Subtitle directories
@@ -308,8 +310,6 @@ class MediaManager:
             files = glob.glob(f"{self.media_file_directories[media_directory_index]}/*", recursive=True)
             for file in files:
                 move = False
-                #print(f"Type: {type} - File: {file}")
-
                 if not os.path.exists(file):
                     continue
                 if type == "series" and (bool(re.search("S[0-9][0-9]*E[0-9][0-9]*", file)) \
@@ -319,8 +319,7 @@ class MediaManager:
                 if type == "media" and re.search("S[0-9][0-9]*E[0-9][0-9]*", file) is None \
                     and re.search("s[0-9][0-9]*e[0-9][0-9]*", file) is None:
                     move = True
-                    break  
-                          
+                    break                            
             if move:
                 print(f"Moving ({media_directory_index+1}/{len(self.media_file_directories)}) {self.media_file_directories[media_directory_index]} to {target_directory}")
                 shutil.move(self.media_file_directories[media_directory_index], target_directory)
@@ -354,8 +353,8 @@ def media_manager(argv):
         elif opt in ("-s", "--subtitle"):
             subtitle_flag = True
 
-    media_manager_instance.set_media_directory(media_directory=source_directory)
-    media_manager_instance.find_media()
+    media_manager_instance.set_media_directory(media_directory=source_directory) 
+    media_manager_instance.find_media()   
     media_manager_instance.set_subtitle(subtitle=subtitle_flag)
     media_manager_instance.clean_media()
 
