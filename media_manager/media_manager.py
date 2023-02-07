@@ -122,6 +122,13 @@ class MediaManager:
         for key in self.filters:
             self.new_file_name = re.sub(str(key), str(self.filters[key]), self.new_file_name)
 
+    def verify_parent_directory(self):
+        # Check if media file does not have it's own folder, and create it if it does not
+        if os.path.join(self.parent_directory, self.folder_name) == self.directory:
+            self.parent_directory = os.path.join(self.parent_directory, self.folder_name)
+            self.folder_name = self.file_name
+            os.makedirs(os.path.join(self.parent_directory, self.folder_name))
+
     # Rediscover cleaned media
     def find_media(self):
         self.media_files = []
@@ -290,6 +297,7 @@ class MediaManager:
             self.new_file_name = self.file_name
             self.media_detection()
             self.clean_file_name()
+            self.verify_parent_directory()
             self.rename_file()
             self.clean_subtitle_directory(subtitle_directory=f"{self.parent_directory}/{self.folder_name}/Subs")
             self.set_media_metadata()
