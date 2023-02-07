@@ -146,6 +146,7 @@ class MediaManager:
         self.file_name, self.file_extension = os.path.splitext(self.media_file)
         if old_file_path != f"{self.new_media_file_path}":
             os.rename(old_file_path, self.new_media_file_path)
+            self.file_name = self.new_file_name
             self.media_file_index = 0
 
     # Clean Subtitle directories
