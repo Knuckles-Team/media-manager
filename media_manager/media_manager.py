@@ -293,22 +293,46 @@ class MediaManager:
         self.reset_variables()
 
     # Move media to new destination
-    def move_media(self, target_directory: str):
-        if os.path.isdir(target_directory):
-            for media_directory_index in range(0, len(self.media_file_directories)):
-                shutil.move(self.media_file_directories[media_directory_index], target_directory)
-        else:
+    def move_media(self, target_directory: str, type="media"):   
+        if not os.path.isdir(target_directory):
             print(f"Directory {target_directory} does not exist")
+            return
+        
+        self.find_media()               
+        for media_directory_index in range(0, len(self.media_file_directories)):
+            # Find if file inside this directory is named as a series
+            move = False
+            files = glob.glob(f"{self.media_file_directories[media_directory_index]}/*", recursive=True)
+            for file in files:
+                move = False
+                #print(f"Type: {type} - File: {file}")
 
+                if not os.path.exists(file):
+                    continue
+                if type == "series" and (bool(re.search("S[0-9][0-9]*E[0-9][0-9]*", file)) \
+                    or bool(re.search("s[0-9][0-9]*e[0-9][0-9]*", file))):
+                    move = True    
+                    break         
+                if type == "media" and re.search("S[0-9][0-9]*E[0-9][0-9]*", file) is None \
+                    and re.search("s[0-9][0-9]*e[0-9][0-9]*", file) is None:
+                    move = True
+                    break  
+                          
+            if move:
+                print(f"Moving ({media_directory_index+1}/{len(self.media_file_directories)}) {self.media_file_directories[media_directory_index]} to {target_directory}")
+                shutil.move(self.media_file_directories[media_directory_index], target_directory)
+            
 
 def media_manager(argv):
     media_manager_instance = MediaManager()
-    move_flag = False
+    media_flag = False
+    tv_flag = False
     subtitle_flag = False
-    move_directory = "~/Downloads"
+    tv_directory = "~/Downloads"
     media_directory = "~/Downloads"
+    source_directory = "~/Downloads"
     try:
-        opts, args = getopt.getopt(argv, "hd:m:s", ["help", "move=",  "directory=", "subtitle"])
+        opts, args = getopt.getopt(argv, "hd:m:t:s", ["help", "media-directory=", "tv-directory=", "directory=", "subtitle"])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
@@ -317,30 +341,36 @@ def media_manager(argv):
             usage()
             sys.exit()
         elif opt in ("-d", "--directory"):
+            source_directory = arg
+        elif opt in ("-m", "--media-directory"):
+            media_flag = True
             media_directory = arg
-        elif opt in ("-m", "--move"):
-            move_flag = True
-            move_directory = arg
+        elif opt in ("-t", "--tv-directory"):
+            tv_flag = True
+            tv_directory = arg
         elif opt in ("-s", "--subtitle"):
             subtitle_flag = True
 
-    media_manager_instance.set_media_directory(media_directory=media_directory)
+    media_manager_instance.set_media_directory(media_directory=source_directory)
     media_manager_instance.find_media()
     media_manager_instance.set_subtitle(subtitle=subtitle_flag)
     media_manager_instance.clean_media()
 
-    if move_flag:
-        media_manager_instance.move_media(target_directory=move_directory)
-
+    if tv_flag:
+        media_manager_instance.move_media(target_directory=tv_directory, type="series")
+    if media_flag:
+        media_manager_instance.move_media(target_directory=media_directory, type="media")
+    
 
 def usage():
     print(f'Usage:\n'
-          f'-h | --help      [ See usage ]\n'
-          f'-d | --directory [ Directory to scan for media ]\n'
-          f'-m | --move      [ Directory to move media folders ]\n'
-          f'-s | --subtitle  [ Apply subtitle in media Sub folder ]\n'
+          f'-h | --help            [ See usage ]\n'
+          f'-d | --directory       [ Directory to scan for media ]\n'
+          f'-m | --media-directory [ Directory to move Media ]\n'
+          f'-t | --tv-directory    [ Directory to move Series ]\n'
+          f'-s | --subtitle        [ Apply subtitle in media Sub folder ]\n'
           f'\n'
-          f'media-manager -d "~/Downloads" -m "~/User/Media -s"\n')
+          f'media-manager -d "~/Downloads" -m "~/User/Media" -s\n')
 
 
 def main():
