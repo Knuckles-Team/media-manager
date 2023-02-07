@@ -351,9 +351,9 @@ def media_manager(argv):
     media_flag = False
     tv_flag = False
     subtitle_flag = False
-    tv_directory = "~/Downloads"
-    media_directory = "~/Downloads"
-    source_directory = "~/Downloads"
+    tv_directory = f"{os.path.expanduser('~')}/Downloads"
+    media_directory = f"{os.path.expanduser('~')}/Downloads"
+    source_directory = f"{os.path.expanduser('~')}/Downloads"
     try:
         opts, args = getopt.getopt(argv, "hd:m:t:s", ["help", "media-directory=", "tv-directory=", "directory=", "subtitle"])
     except getopt.GetoptError:
