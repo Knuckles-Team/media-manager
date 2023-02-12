@@ -129,17 +129,21 @@ class MediaManager:
         print(f"Validating parent directory: {os.path.normcase(os.path.join(self.directory, ''))} - {os.path.normcase(os.path.join(self.media_directory, ''))}")
         if self.directory == self.media_directory:
             # If parent folder does not exist, create it
-            print(f"No parent folder detected, creating one for this media {os.path.join(self.parent_directory, self.folder_name)}")
             self.parent_directory = os.path.join(self.parent_directory, self.folder_name)
-            self.folder_name = self.file_name
-            os.makedirs(os.path.join(self.parent_directory, self.folder_name))
+            if self.series:
+                self.folder_name = re.sub(" - S[0-9]+E[0-9]+", "", self.new_file_name)
+            else:
+                self.folder_name = self.new_file_name            
+            print(f"Created new parent directory: {os.path.join(self.parent_directory, self.folder_name)}")
             for file_name in os.listdir(self.directory):
-                # construct full file path
-                source = f"{self.directory}/{file_name}"
-                destination = f"{self.parent_directory}/{self.folder_name}/{file_name}"
-                # move only files
-                if os.path.isfile(source):
-                    shutil.move(source, destination)
+                # Only move files that belong to the newly created folder
+                if self.folder_name in file_name:
+                    # construct full file path
+                    source = f"{self.directory}/{file_name}"
+                    destination = f"{self.parent_directory}/{self.folder_name}/{file_name}"
+                    # move only files
+                    if os.path.isfile(source):
+                        shutil.move(source, destination)
             if os.path.isdir(f"{self.directory}/Subs"):
                     subtitles = glob.glob(f"{self.directory}/Subs/*/", recursive=True)
                     for subtitle_directory in subtitles:
