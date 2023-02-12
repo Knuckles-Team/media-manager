@@ -145,11 +145,11 @@ class MediaManager:
                     # move only files
                     if os.path.isfile(source):
                         shutil.move(source, destination)
-            if os.path.isdir(os.path.join(self.directory, "Subs")):
-                    subtitles = glob.glob(os.path.join(self.directory, "Subs/*/"), recursive=True)
+            if os.path.isdir(os.path.join(self.directory, 'Subs')):
+                    subtitles = glob.glob(os.path.join(self.directory, 'Subs/*/'), recursive=True)
                     for subtitle_directory in subtitles:
                         shutil.move(f"{subtitle_directory}", f"{os.path.join(self.directory, 'Subs')}")
-                    os.rmdir(f"{os.path.join(self.directory, "Subs")}")
+                    os.rmdir(f"{os.path.join(self.directory, 'Subs')}")
                     os.rmdir(f"{self.directory}")    
             self.directory = self.parent_directory
 
