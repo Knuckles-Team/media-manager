@@ -133,7 +133,8 @@ class MediaManager:
             if self.series:
                 self.folder_name = re.sub(" - S[0-9]+E[0-9]+", "", self.new_file_name)
             else:
-                self.folder_name = self.new_file_name            
+                self.folder_name = self.new_file_name       
+            os.makedirs(os.path.join(self.parent_directory, self.folder_name))     
             print(f"Created new parent directory: {os.path.join(self.parent_directory, self.folder_name)}")
             for file_name in os.listdir(self.directory):
                 # Only move files that belong to the newly created folder
