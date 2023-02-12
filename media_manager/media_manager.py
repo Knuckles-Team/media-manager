@@ -152,7 +152,7 @@ class MediaManager:
                         shutil.move(f"{subtitle_directory}", f"{os.path.join(self.directory, 'Subs')}")
                     os.rmdir(f"{os.path.join(self.directory, 'Subs')}")
                     os.rmdir(f"{self.directory}")    
-            self.directory = self.parent_directory
+        self.directory = self.parent_directory
 
     # Rediscover cleaned media
     def find_media(self):
@@ -213,7 +213,7 @@ class MediaManager:
                         **{'metadata:g:0': f"title={self.new_file_name}",
                            'metadata:g:1': f"comment={self.new_file_name}"}) \
                 .overwrite_output() \
-                .run()
+                .run(quiet=True)
             os.remove(self.new_media_file_path)
             os.rename(self.temporary_media_file_path, self.new_media_file_path)
             self.media_file_index = 0
@@ -258,7 +258,7 @@ class MediaManager:
                     **{'metadata:g:0': f"title={self.new_file_name}", 'metadata:g:1': f"comment={self.new_file_name}",
                        'metadata:s:s:0': "language=" + "en", 'metadata:s:s:0': "title=" + "English",
                        'metadata:s:s:1': "language=" + "sp", 'metadata:s:s:1': "title=" + "Spanish"}
-                ).overwrite_output().run()
+                ).overwrite_output().run(quiet=True)
                 os.remove(self.new_media_file_path)
                 os.rename(self.temporary_media_file_path, self.new_media_file_path)
             elif not subtitle_exists and not os.path.isfile(subtitle_file):
@@ -269,7 +269,7 @@ class MediaManager:
                             **{'metadata:g:0': f"title={self.new_file_name}",
                                'metadata:g:1': f"comment={self.new_file_name}"}) \
                     .overwrite_output() \
-                    .run()
+                    .run(quiet=True)
                 os.remove(self.new_media_file_path)
                 os.rename(self.temporary_media_file_path, self.new_media_file_path)
             self.media_file_index += 1
@@ -285,8 +285,7 @@ class MediaManager:
         self.parent_directory = os.path.dirname(os.path.normpath(self.directory))
         # Check if media folder name is the same as what is proposed
         if os.path.normpath(os.path.join(self.directory, '')) != os.path.normpath(os.path.join(self.parent_directory, self.folder_name, '')):
-            print(f"\tRenaming directory: {os.path.normpath(os.path.join(self.directory, ''))}\n\t\t"
-                  f"New directory: {os.path.normpath(os.path.join(self.parent_directory, self.folder_name, ''))}")
+            print(f"\tRenaming directory: {os.path.normpath(os.path.join(self.directory, ''))} --> {os.path.normpath(os.path.join(self.parent_directory, self.folder_name, ''))}")
             if os.path.isdir(f"{self.parent_directory}/{self.folder_name}"):
                 for file_name in os.listdir(self.directory):
                     # construct full file path
