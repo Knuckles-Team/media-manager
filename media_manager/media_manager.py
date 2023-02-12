@@ -97,7 +97,9 @@ class MediaManager:
         self.subtitle = subtitle
 
     def set_media_directory(self, media_directory: str):
-        self.media_directory = media_directory
+        self.media_directory = os.path.normcase(os.path.join(media_directory, ''))
+        if not self.media_directory.endswith(os.path.sep):
+                self.media_directory += os.path.sep
 
     def get_media_list(self):
         return self.media_files
@@ -125,7 +127,7 @@ class MediaManager:
     def verify_parent_directory(self):
         # Check if media file does not have it's own folder, and create it if it does not
         print(f"Validating parent directory: {os.path.normcase(os.path.join(self.directory, ''))} - {os.path.normcase(os.path.join(self.media_directory, ''))}")
-        if os.path.normcase(os.path.join(self.directory, '')) == os.path.normcase(os.path.join(self.media_directory, '')):
+        if self.directory == self.media_directory:
             # If parent folder does not exist, create it
             print(f"No parent folder detected, creating one for this media {os.path.join(self.parent_directory, self.folder_name)}")
             self.parent_directory = os.path.join(self.parent_directory, self.folder_name)
@@ -307,7 +309,9 @@ class MediaManager:
     def clean_media(self):
         while self.media_file_index < len(self.media_files):
             print(f"Validating ({self.media_file_index+1}/{len(self.media_files)}): {self.media_files[self.media_file_index]}\n")
-            self.directory = os.path.dirname(self.media_files[self.media_file_index])
+            self.directory = os.path.normcase(os.path.dirname(self.media_files[self.media_file_index])) 
+            if not self.directory.endswith(os.path.sep):
+                self.directory += os.path.sep
             self.media_file = os.path.basename(self.media_files[self.media_file_index])
             self.file_name, self.file_extension = os.path.splitext(self.media_file)
             self.new_file_name = self.file_name
