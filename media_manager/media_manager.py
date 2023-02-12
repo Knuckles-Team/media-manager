@@ -279,7 +279,8 @@ class MediaManager:
             self.folder_name = self.new_file_name
         self.parent_directory = os.path.dirname(os.path.normpath(self.directory))
         # Check if media folder name is the same as what is proposed
-        if os.path.join(self.directory) != os.path.join(self.parent_directory, self.folder_name):
+        if os.path.normpath(os.path.join(self.directory, '')) != os.path.normpath(os.path.join(self.parent_directory, self.folder_name, '')):
+            print(f"Renaming directory {os.path.normpath(os.path.join(self.directory, ''))} to {os.path.normpath(os.path.join(self.parent_directory, self.folder_name, ''))}")
             if os.path.isdir(f"{self.parent_directory}/{self.folder_name}"):
                 for file_name in os.listdir(self.directory):
                     # construct full file path
@@ -298,6 +299,8 @@ class MediaManager:
                 os.rename(f"{self.directory}", f"{self.parent_directory}/{self.folder_name}")            
             self.find_media()
             self.media_file_index = 0
+        else:
+            print("Renaming directory not needed")
 
     # Cleanup Variables
     def reset_variables(self):
@@ -328,6 +331,7 @@ class MediaManager:
             self.clean_subtitle_directory(subtitle_directory=f"{self.parent_directory}/{self.folder_name}/Subs")
             self.set_media_metadata()
             self.rename_directory()
+            print(f"Index Should be +1: {self.media_file_index}")
         self.reset_variables()
 
     # Move media to new destination
