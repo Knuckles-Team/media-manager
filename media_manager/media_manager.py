@@ -97,7 +97,7 @@ class MediaManager:
         self.subtitle = subtitle
 
     def set_media_directory(self, media_directory: str):
-        self.media_directory = os.path.normcase(os.path.join(media_directory, ''))
+        self.media_directory = os.path.normpath(os.path.join(media_directory, ''))
         if not self.media_directory.endswith(os.path.sep):
                 self.media_directory += os.path.sep
 
@@ -127,10 +127,10 @@ class MediaManager:
 
     def verify_parent_directory(self):
         # Check if media file does not have it's own folder, and create it if it does not
-        print(f"\tVerifying if Media is Missing Parent Folder:\n\t\t{os.path.normcase(os.path.join(self.directory, ''))}\n\t\t{os.path.normcase(os.path.join(self.parent_directory, self.folder_name, ''))}")
+        print(f"\tVerifying if Media is Missing Parent Folder:\n\t\t{os.path.normpath(os.path.join(self.directory, ''))}\n\t\t{os.path.normpath(os.path.join(self.parent_directory, self.folder_name, ''))}")
         if self.directory == os.path.join(self.parent_directory, self.folder_name):
             # If parent folder does not exist, create it
-            self.parent_directory = os.path.normcase(os.path.join(self.parent_directory, self.folder_name, ''))
+            self.parent_directory = os.path.normpath(os.path.join(self.parent_directory, self.folder_name, ''))
             if self.series:
                 self.folder_name = re.sub(" - S[0-9]+E[0-9]+", "", self.new_file_name)
             else:
@@ -284,8 +284,8 @@ class MediaManager:
             self.folder_name = self.new_file_name
         # self.parent_directory = os.path.dirname(os.path.normpath(self.directory))
         # Check if media folder name is the same as what is proposed
-        if os.path.normpath(os.path.join(self.directory, '')) != os.path.normpath(os.path.join(self.parent_directory, self.folder_name, '')):
-            print(f"\tRenaming directory: {os.path.normpath(os.path.join(self.directory, ''))} --> {os.path.normpath(os.path.join(self.parent_directory, self.folder_name, ''))}")
+        if os.path.normpath(os.path.join(self.directory, self.folder_name, '')) != os.path.normpath(os.path.join(self.parent_directory, self.folder_name, '')):
+            print(f"\tRenaming directory: {os.path.normpath(os.path.join(self.directory, self.folder_name, ''))} --> {os.path.normpath(os.path.join(self.parent_directory, self.folder_name, ''))}")
             if os.path.isdir(os.path.normpath(os.path.join(self.parent_directory, self.folder_name))):
                 for file_name in os.listdir(self.directory):
                     # construct full file path
@@ -301,7 +301,7 @@ class MediaManager:
                     os.rmdir(os.path.normpath(os.path.join(self.directory, "Subs")))
                     os.rmdir(f"{self.directory}")                
             else:
-                os.rename(f"{self.directory}", os.path.normpath(os.path.join(self.parent_directory, self.folder_name)))            
+                os.rename(os.path.normpath(os.path.join(self.directory, self.folder_name, '')), os.path.normpath(os.path.join(self.parent_directory, self.folder_name)))            
             self.find_media()
             self.media_file_index = 0
         else:
@@ -323,7 +323,7 @@ class MediaManager:
     def clean_media(self):
         while self.media_file_index < len(self.media_files):
             print(f"Processing ({self.media_file_index+1}/{len(self.media_files)}): {self.media_files[self.media_file_index]}")
-            self.directory = os.path.normcase(os.path.dirname(self.media_files[self.media_file_index])) 
+            self.directory = os.path.normpath(os.path.dirname(self.media_files[self.media_file_index])) 
             if not self.directory.endswith(os.path.sep):
                 self.directory += os.path.sep
             self.media_file = os.path.basename(self.media_files[self.media_file_index])
