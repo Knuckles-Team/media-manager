@@ -126,6 +126,7 @@ class MediaManager:
         # Check if media file does not have it's own folder, and create it if it does not
         print(f"Validating parent directory: {os.path.join(self.directory, '')} - {os.path.join(self.media_directory, '')}")
         if os.path.join(self.directory, '') == os.path.join(self.media_directory, ''):
+            # If parent folder does not exist, create it
             print(f"No parent folder detected, creating one for this media {os.path.join(self.parent_directory, self.folder_name)}")
             self.parent_directory = os.path.join(self.parent_directory, self.folder_name)
             self.folder_name = self.file_name
