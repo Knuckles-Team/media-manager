@@ -282,26 +282,26 @@ class MediaManager:
             self.folder_name = re.sub(" - S[0-9]+E[0-9]+", "", self.new_file_name)
         else:
             self.folder_name = self.new_file_name
-        self.parent_directory = os.path.dirname(os.path.normpath(self.directory))
+        # self.parent_directory = os.path.dirname(os.path.normpath(self.directory))
         # Check if media folder name is the same as what is proposed
         if os.path.normpath(os.path.join(self.directory, '')) != os.path.normpath(os.path.join(self.parent_directory, self.folder_name, '')):
             print(f"\tRenaming directory: {os.path.normpath(os.path.join(self.directory, ''))} --> {os.path.normpath(os.path.join(self.parent_directory, self.folder_name, ''))}")
-            if os.path.isdir(f"{self.parent_directory}/{self.folder_name}"):
+            if os.path.isdir(os.path.normpath(os.path.join(self.parent_directory, self.folder_name))):
                 for file_name in os.listdir(self.directory):
                     # construct full file path
-                    source = f"{self.directory}/{file_name}"
-                    destination = f"{self.parent_directory}/{self.folder_name}/{file_name}"
+                    source = os.path.normpath(os.path.join(self.directory, file_name))
+                    destination = os.path.normpath(os.path.join(self.parent_directory, self.folder_name, file_name))
                     # move only files
                     if os.path.isfile(source):
                         shutil.move(source, destination)
-                if os.path.isdir(f"{self.directory}/Subs"):
+                if os.path.isdir(os.path.normpath(os.path.join(self.directory, "Subs"))):
                     subtitles = glob.glob(f"{self.directory}/Subs/*/", recursive=True)
                     for subtitle_directory in subtitles:
-                        shutil.move(f"{subtitle_directory}", f"{self.parent_directory}/{self.folder_name}/Subs")
-                    os.rmdir(f"{self.directory}/Subs")
+                        shutil.move(f"{subtitle_directory}", os.path.normpath(os.path.join(self.parent_directory, self.folder_name, "Subs")))
+                    os.rmdir(os.path.normpath(os.path.join(self.directory, "Subs")))
                     os.rmdir(f"{self.directory}")                
             else:
-                os.rename(f"{self.directory}", f"{self.parent_directory}/{self.folder_name}")            
+                os.rename(f"{self.directory}", os.path.normpath(os.path.join(self.parent_directory, self.folder_name)))            
             self.find_media()
             self.media_file_index = 0
         else:
