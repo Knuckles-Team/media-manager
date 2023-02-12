@@ -126,10 +126,10 @@ class MediaManager:
 
     def verify_parent_directory(self):
         # Check if media file does not have it's own folder, and create it if it does not
-        print(f"Validating parent directory: {os.path.normcase(os.path.join(self.directory, ''))} - {os.path.normcase(os.path.join(self.parent_directory, self.folder_name))}")
+        print(f"Validating parent directory: {os.path.normcase(os.path.join(self.directory, ''))} - {os.path.normcase(os.path.join(self.parent_directory, self.folder_name, ''))}")
         if self.directory == os.path.join(self.parent_directory, self.folder_name):
             # If parent folder does not exist, create it
-            self.parent_directory = os.path.join(self.parent_directory, self.folder_name)
+            self.parent_directory = os.path.normcase(os.path.join(self.parent_directory, self.folder_name, ''))
             if self.series:
                 self.folder_name = re.sub(" - S[0-9]+E[0-9]+", "", self.new_file_name)
             else:
@@ -140,16 +140,16 @@ class MediaManager:
                 # Only move files that belong to the newly created folder
                 if self.folder_name in file_name:
                     # construct full file path
-                    source = f"{self.directory}/{file_name}"
-                    destination = f"{self.parent_directory}/{self.folder_name}/{file_name}"
+                    source = os.path.join(self.directory, file_name)
+                    destination = os.path.join(self.parent_directory, self.folder_name, file_name)
                     # move only files
                     if os.path.isfile(source):
                         shutil.move(source, destination)
-            if os.path.isdir(f"{self.directory}/Subs"):
-                    subtitles = glob.glob(f"{self.directory}/Subs/*/", recursive=True)
+            if os.path.isdir(os.path.join(self.directory, "Subs")):
+                    subtitles = glob.glob(os.path.join(self.directory, "Subs/*/"), recursive=True)
                     for subtitle_directory in subtitles:
-                        shutil.move(f"{subtitle_directory}", f"{self.parent_directory}/{self.folder_name}/Subs")
-                    os.rmdir(f"{self.directory}/Subs")
+                        shutil.move(f"{subtitle_directory}", f"{os.path.join(self.directory, "Subs")")
+                    os.rmdir(f"{os.path.join(self.directory, "Subs")}")
                     os.rmdir(f"{self.directory}")    
             self.directory = self.parent_directory
 
