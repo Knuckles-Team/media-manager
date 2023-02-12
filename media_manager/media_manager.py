@@ -150,7 +150,8 @@ class MediaManager:
                     for subtitle_directory in subtitles:
                         shutil.move(f"{subtitle_directory}", f"{self.parent_directory}/{self.folder_name}/Subs")
                     os.rmdir(f"{self.directory}/Subs")
-                    os.rmdir(f"{self.directory}")     
+                    os.rmdir(f"{self.directory}")    
+            self.directory = self.parent_directory
 
     # Rediscover cleaned media
     def find_media(self):
