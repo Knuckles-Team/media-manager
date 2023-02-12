@@ -126,8 +126,8 @@ class MediaManager:
 
     def verify_parent_directory(self):
         # Check if media file does not have it's own folder, and create it if it does not
-        print(f"Validating parent directory: {os.path.normcase(os.path.join(self.directory, ''))} - {os.path.normcase(os.path.join(self.parent_directory, ''))}")
-        if self.directory == self.parent_directory:
+        print(f"Validating parent directory: {os.path.normcase(os.path.join(self.directory, ''))} - {os.path.normcase(os.path.join(self.parent_directory, self.folder_name))}")
+        if self.directory == os.path.join(self.parent_directory, self.folder_name):
             # If parent folder does not exist, create it
             self.parent_directory = os.path.join(self.parent_directory, self.folder_name)
             if self.series:
