@@ -156,7 +156,7 @@ class MediaManager:
 
     # Rediscover cleaned media
     def find_media(self):
-        print("\tScanning for media...")
+        print("Scanning for media...")
         self.media_files = []
         files = glob.glob(f"{self.media_directory}/*", recursive=True)
         files = files + glob.glob(f"{self.media_directory}/*/*", recursive=True)
@@ -169,6 +169,7 @@ class MediaManager:
             elif file.endswith(".nfo") or file.endswith(".txt") or file.endswith(".exe"):
                 os.remove(file)
         self.media_files.sort()
+        print(f"Media Found! ({len(self.media_files)} files)")
 
     # Rename file
     def rename_file(self):
