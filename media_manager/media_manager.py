@@ -137,7 +137,7 @@ class MediaManager:
         print(f"\tVerifying if Media is Missing Parent Folder:\n\t\t"
               f"{os.path.normpath(os.path.join(self.directory, ''))}\n\t\t"
               f"{os.path.normpath(os.path.join(self.media_directory, self.folder_name, ''))}")
-        if os.path.normpath(os.path.join(self.directory, ''))  == os.path.normpath(os.path.join(self.media_directory, '')) :
+        if os.path.normpath(os.path.join(self.directory, '')) == os.path.normpath(os.path.join(self.media_directory, '')) :
             # If parent folder does not exist, create it
             self.parent_directory = os.path.normpath(os.path.join(self.media_directory, self.folder_name,''))
             if not os.path.isdir(os.path.normpath(os.path.join(self.parent_directory))):
@@ -162,7 +162,6 @@ class MediaManager:
             self.parent_directory = os.path.join(self.parent_directory, os.pardir)
         else:
             print(f"\tParent directory already exists: {self.directory}")
-            self.directory = self.parent_directory
 
     # Rediscover cleaned media
     def find_media(self):
