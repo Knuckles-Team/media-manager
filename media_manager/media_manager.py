@@ -132,7 +132,7 @@ class MediaManager:
             self.folder_name = self.new_file_name    
         # Check if media file does not have it's own folder, and create it if it does not
         print(f"\tVerifying if Media is Missing Parent Folder:\n\t\t{os.path.normpath(os.path.join(self.directory, ''))}\n\t\t{os.path.normpath(os.path.join(self.parent_directory, self.folder_name, ''))}")
-        if os.path.normpath(os.path.join(self.directory, ''))  != os.path.normpath(os.path.join(self.parent_directory, self.folder_name, '')) :
+        if os.path.normpath(os.path.join(self.directory, ''))  == os.path.normpath(os.path.join(self.parent_directory, '')) :
             # If parent folder does not exist, create it
             self.parent_directory = os.path.normpath(os.path.join(self.parent_directory, self.folder_name, ''))            
             if os.path.isdir(os.path.normpath(os.path.join(self.parent_directory, self.folder_name))):
