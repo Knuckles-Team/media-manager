@@ -5,7 +5,6 @@ import os
 import sys
 import re
 import getopt
-import requests
 import ffmpeg
 import shutil
 import glob
@@ -26,6 +25,7 @@ class MediaManager:
         self.new_file_name = ""
         self.new_media_file_path = ""
         self.temporary_media_file_path = ""
+        self.quiet = True
         self.movie_filters = {
             f"2160p.*$": f"2160p",
             f"1080p.*$": f"1080p",
@@ -93,13 +93,16 @@ class MediaManager:
         self.subtitle = False
         self.media_file_index = 0
 
+    def set_verbose(self, quiet=True):
+        self.quiet = quiet
+
     def set_subtitle(self, subtitle: bool):
         self.subtitle = subtitle
 
     def set_media_directory(self, media_directory: str):
-        self.media_directory = os.path.normcase(os.path.join(media_directory, ''))
+        self.media_directory = os.path.normpath(os.path.join(media_directory, ''))
         if not self.media_directory.endswith(os.path.sep):
-                self.media_directory += os.path.sep
+            self.media_directory += os.path.sep
 
     def get_media_list(self):
         return self.media_files
@@ -109,6 +112,7 @@ class MediaManager:
 
     # Detect if series or a movie
     def media_detection(self):
+        print("\tDetecting media type...")
         self.parent_directory = os.path.dirname(os.path.normpath(self.directory))
         self.folder_name = os.path.basename(os.path.normpath(self.directory))
         if bool(re.search("S[0-9][0-9]*E[0-9][0-9]*", self.file_name)) \
@@ -125,36 +129,45 @@ class MediaManager:
             self.new_file_name = re.sub(str(key), str(self.filters[key]), self.new_file_name)
 
     def verify_parent_directory(self):
+        if self.series:
+            self.folder_name = re.sub(" - S[0-9]+E[0-9]+", "", self.new_file_name)
+        else:
+            self.folder_name = self.new_file_name
         # Check if media file does not have it's own folder, and create it if it does not
-        print(f"Validating parent directory: {os.path.normcase(os.path.join(self.directory, ''))} - {os.path.normcase(os.path.join(self.parent_dirctory, ''))}")
-        if self.directory == self.parent_dirctory:
+        print(f"\tVerifying if Media is Missing Parent Folder:\n\t\t"
+              f"{os.path.normpath(os.path.join(self.directory, ''))}\n\t\t"
+              f"{os.path.normpath(os.path.join(self.media_directory, self.folder_name, ''))}")
+        if os.path.normpath(os.path.join(self.directory, '')) == os.path.normpath(
+                os.path.join(self.media_directory, '')):
             # If parent folder does not exist, create it
-            self.parent_directory = os.path.join(self.parent_directory, self.folder_name)
-            if self.series:
-                self.folder_name = re.sub(" - S[0-9]+E[0-9]+", "", self.new_file_name)
-            else:
-                self.folder_name = self.new_file_name       
-            os.makedirs(os.path.join(self.parent_directory, self.folder_name))     
-            print(f"Created new parent directory: {os.path.join(self.parent_directory, self.folder_name)}")
+            self.parent_directory = os.path.normpath(os.path.join(self.media_directory, self.folder_name, ''))
+            if not os.path.isdir(os.path.normpath(os.path.join(self.parent_directory))):
+                os.makedirs(os.path.join(self.parent_directory, ''))
+                print(f"\tCreated new parent directory: {os.path.join(self.parent_directory, '')}")
             for file_name in os.listdir(self.directory):
-                # Only move files that belong to the newly created folder
                 if self.folder_name in file_name:
                     # construct full file path
-                    source = f"{self.directory}/{file_name}"
-                    destination = f"{self.parent_directory}/{self.folder_name}/{file_name}"
+                    source = os.path.normpath(os.path.join(self.directory, file_name))
+                    destination = os.path.normpath(os.path.join(self.parent_directory, file_name))
                     # move only files
                     if os.path.isfile(source):
                         shutil.move(source, destination)
-            if os.path.isdir(f"{self.directory}/Subs"):
+                if os.path.isdir(os.path.normpath(os.path.join(self.directory, "Subs"))):
                     subtitles = glob.glob(f"{self.directory}/Subs/*/", recursive=True)
                     for subtitle_directory in subtitles:
-                        shutil.move(f"{subtitle_directory}", f"{self.parent_directory}/{self.folder_name}/Subs")
-                    os.rmdir(f"{self.directory}/Subs")
-                    os.rmdir(f"{self.directory}")    
+                        shutil.move(f"{subtitle_directory}",
+                                    os.path.normpath(os.path.join(self.parent_directory, "Subs")))
+                    os.rmdir(os.path.normpath(os.path.join(self.directory, "Subs")))
+                    os.rmdir(f"{self.directory}")
+                print(f"\tMerging parent directories: {os.path.join(self.parent_directory, '')}")
             self.directory = self.parent_directory
+            self.parent_directory = os.path.join(self.parent_directory, os.pardir)
+        else:
+            print(f"\tParent directory already exists: {self.directory}")
 
     # Rediscover cleaned media
     def find_media(self):
+        print("\nScanning for media...")
         self.media_files = []
         files = glob.glob(f"{self.media_directory}/*", recursive=True)
         files = files + glob.glob(f"{self.media_directory}/*/*", recursive=True)
@@ -167,35 +180,43 @@ class MediaManager:
             elif file.endswith(".nfo") or file.endswith(".txt") or file.endswith(".exe"):
                 os.remove(file)
         self.media_files.sort()
+        print(f"\tMedia Found! ({len(self.media_files)} files)")
 
     # Rename file
     def rename_file(self):
-        old_file_path = f"{self.parent_directory}/{self.folder_name}/{self.file_name}{self.file_extension}"
-        self.new_media_file_path = f"{self.parent_directory}/{self.folder_name}/{self.new_file_name}{self.file_extension}"
-        self.temporary_media_file_path = f"{self.parent_directory}/{self.folder_name}/temp-{self.new_file_name}{self.file_extension}"
+        print("\tRenaming file...")
+        old_file_path = os.path.normpath(os.path.join(self.directory,
+                                                      f"{self.file_name}{self.file_extension}"))
+        self.new_media_file_path = os.path.normpath(os.path.join(self.directory,
+                                                                 f"{self.new_file_name}{self.file_extension}"))
+        self.temporary_media_file_path = os.path.normpath(os.path.join(self.directory,
+                                                                       f"temp-{self.new_file_name}{self.file_extension}"))
         # Check if media file name is the same as what is proposed
         self.file_name, self.file_extension = os.path.splitext(self.media_file)
         if old_file_path != f"{self.new_media_file_path}" and os.path.isfile(old_file_path):
             os.rename(old_file_path, self.new_media_file_path)
             self.file_name = self.new_file_name
-            self.media_files[self.media_file_index] = self.new_media_file_path            
+            self.media_files[self.media_file_index] = self.new_media_file_path
             self.media_file_index = 0
 
     # Clean Subtitle directories
     def clean_subtitle_directory(self, subtitle_directory: str):
-        subtitle_directories = glob.glob(f"{subtitle_directory}/*/", recursive = True)
+        subtitle_directories = glob.glob(f"{subtitle_directory}/*/", recursive=True)
         for subtitle_directory_index in range(0, len(subtitle_directories)):
-            subtitle_parent_directory = os.path.dirname(os.path.normpath(subtitle_directories[subtitle_directory_index]))
+            subtitle_parent_directory = os.path.dirname(
+                os.path.normpath(subtitle_directories[subtitle_directory_index]))
             subtitle_directory = os.path.basename(os.path.normpath(subtitle_directories[subtitle_directory_index]))
             if os.path.isdir(subtitle_directories[subtitle_directory_index]):
                 new_folder_name = subtitle_directory
                 for key in self.series_filters:
                     new_folder_name = re.sub(str(key), str(self.series_filters[key]), new_folder_name)
                 if new_folder_name != subtitle_directory:
-                    os.rename(subtitle_directories[subtitle_directory_index], f"{subtitle_parent_directory}/{new_folder_name}")
+                    os.rename(subtitle_directories[subtitle_directory_index],
+                              os.path.normpath(os.path.join(subtitle_parent_directory, new_folder_name)))
 
     # Check if media metadata title is the same as what is proposed
     def set_media_metadata(self):
+        print(f"\tSetting media metadata for {os.path.basename(self.new_media_file_path)}...")
         if "title" in ffmpeg.probe(self.new_media_file_path)['format']['tags']:
             current_title_metadata = ffmpeg.probe(self.new_media_file_path)['format']['tags']['title']
         else:
@@ -208,7 +229,7 @@ class MediaManager:
                         **{'metadata:g:0': f"title={self.new_file_name}",
                            'metadata:g:1': f"comment={self.new_file_name}"}) \
                 .overwrite_output() \
-                .run()
+                .run(quiet=self.quiet)
             os.remove(self.new_media_file_path)
             os.rename(self.temporary_media_file_path, self.new_media_file_path)
             self.media_file_index = 0
@@ -226,10 +247,12 @@ class MediaManager:
                     if os.path.isfile(file) and (file.endswith("English.srt") or file.endswith("Eng.srt")):
                         subtitle_files.append(os.path.join(subtitle_directories[matching_video], file))
                         subtitle_file = subtitle_files[0]
-            elif os.path.isdir(f"{self.parent_directory}/{self.folder_name}/Subs"):
-                for file in os.listdir(f"{self.parent_directory}/{self.folder_name}/Subs"):
+            elif os.path.isdir(os.path.normpath(os.path.join(self.parent_directory, self.folder_name, "Subs", ""))):
+                for file in os.listdir(
+                        os.path.normpath(os.path.join(self.parent_directory, self.folder_name, "Subs", ""))):
                     if os.path.isfile(file) and (file.endswith("English.srt") or file.endswith("Eng.srt")):
-                        subtitle_files.append(os.path.join(f"{self.parent_directory}/{self.folder_name}/Subs", file))
+                        subtitle_files.append(
+                            os.path.normpath(os.path.join(self.parent_directory, self.folder_name, "Subs", file)))
                         subtitle_file = subtitle_files[0]
             if self.file_extension == ".mkv":
                 scodec = "srt"
@@ -253,7 +276,7 @@ class MediaManager:
                     **{'metadata:g:0': f"title={self.new_file_name}", 'metadata:g:1': f"comment={self.new_file_name}",
                        'metadata:s:s:0': "language=" + "en", 'metadata:s:s:0': "title=" + "English",
                        'metadata:s:s:1': "language=" + "sp", 'metadata:s:s:1': "title=" + "Spanish"}
-                ).overwrite_output().run()
+                ).overwrite_output().run(quiet=self.quiet)
                 os.remove(self.new_media_file_path)
                 os.rename(self.temporary_media_file_path, self.new_media_file_path)
             elif not subtitle_exists and not os.path.isfile(subtitle_file):
@@ -264,7 +287,7 @@ class MediaManager:
                             **{'metadata:g:0': f"title={self.new_file_name}",
                                'metadata:g:1': f"comment={self.new_file_name}"}) \
                     .overwrite_output() \
-                    .run()
+                    .run(quiet=self.quiet)
                 os.remove(self.new_media_file_path)
                 os.rename(self.temporary_media_file_path, self.new_media_file_path)
             self.media_file_index += 1
@@ -277,27 +300,35 @@ class MediaManager:
             self.folder_name = re.sub(" - S[0-9]+E[0-9]+", "", self.new_file_name)
         else:
             self.folder_name = self.new_file_name
-        self.parent_directory = os.path.dirname(os.path.normpath(self.directory))
+        # self.parent_directory = os.path.dirname(os.path.normpath(self.directory))
         # Check if media folder name is the same as what is proposed
-        if os.path.join(self.directory) != os.path.join(self.parent_directory, self.folder_name):
-            if os.path.isdir(f"{self.parent_directory}/{self.folder_name}"):
+        if os.path.normpath(os.path.join(self.directory, '')) != os.path.normpath(
+                os.path.join(self.parent_directory, self.folder_name, '')):
+            print(f"\tRenaming directory: {os.path.normpath(os.path.join(self.directory, ''))} --> "
+                  f"{os.path.normpath(os.path.join(self.parent_directory, self.folder_name, ''))}")
+            if os.path.isdir(os.path.normpath(os.path.join(self.parent_directory, self.folder_name))):
                 for file_name in os.listdir(self.directory):
                     # construct full file path
-                    source = f"{self.directory}/{file_name}"
-                    destination = f"{self.parent_directory}/{self.folder_name}/{file_name}"
+                    source = os.path.normpath(os.path.join(self.directory, file_name))
+                    destination = os.path.normpath(os.path.join(self.parent_directory, self.folder_name, file_name))
                     # move only files
                     if os.path.isfile(source):
                         shutil.move(source, destination)
-                if os.path.isdir(f"{self.directory}/Subs"):
+                if os.path.isdir(os.path.normpath(os.path.join(self.directory, "Subs"))):
                     subtitles = glob.glob(f"{self.directory}/Subs/*/", recursive=True)
                     for subtitle_directory in subtitles:
-                        shutil.move(f"{subtitle_directory}", f"{self.parent_directory}/{self.folder_name}/Subs")
-                    os.rmdir(f"{self.directory}/Subs")
-                    os.rmdir(f"{self.directory}")                
+                        shutil.move(f"{subtitle_directory}", os.path.normpath(os.path.join(self.parent_directory,
+                                                                                           self.folder_name,
+                                                                                           "Subs")))
+                    os.rmdir(os.path.normpath(os.path.join(self.directory, "Subs")))
+                os.rmdir(f"{self.directory}")
             else:
-                os.rename(f"{self.directory}", f"{self.parent_directory}/{self.folder_name}")            
+                os.rename(os.path.normpath(os.path.join(self.directory, '')),
+                          os.path.normpath(os.path.join(self.parent_directory, self.folder_name)))
             self.find_media()
             self.media_file_index = 0
+        else:
+            print("\tRenaming directory not needed")
 
     # Cleanup Variables
     def reset_variables(self):
@@ -314,8 +345,9 @@ class MediaManager:
     # Iterate through all media files found
     def clean_media(self):
         while self.media_file_index < len(self.media_files):
-            print(f"Validating ({self.media_file_index+1}/{len(self.media_files)}): {self.media_files[self.media_file_index]}\n")
-            self.directory = os.path.normcase(os.path.dirname(self.media_files[self.media_file_index])) 
+            print(
+                f"\nProcessing ({self.media_file_index + 1}/{len(self.media_files)}): {self.media_files[self.media_file_index]}")
+            self.directory = os.path.normpath(os.path.dirname(self.media_files[self.media_file_index]))
             if not self.directory.endswith(os.path.sep):
                 self.directory += os.path.sep
             self.media_file = os.path.basename(self.media_files[self.media_file_index])
@@ -331,12 +363,12 @@ class MediaManager:
         self.reset_variables()
 
     # Move media to new destination
-    def move_media(self, target_directory: str, type="media"):   
+    def move_media(self, target_directory: str, type="media"):
         if not os.path.isdir(target_directory):
-            print(f"Directory {target_directory} does not exist")
+            print(f"\nDirectory {target_directory} does not exist")
             return
-        print(f"Moving {type} to {target_directory}")
-        self.find_media()               
+        self.find_media()
+        print(f"\nMoving {type}...")
         for media_directory_index in range(0, len(self.media_file_directories)):
             # Find if file inside this directory is named as a series
             move = False
@@ -346,31 +378,58 @@ class MediaManager:
                 if not os.path.exists(file):
                     continue
                 if type == "series" and (bool(re.search("S[0-9][0-9]*E[0-9][0-9]*", file)) \
-                    or bool(re.search("s[0-9][0-9]*e[0-9][0-9]*", file))):
-                    move = True    
-                    break         
-                if type == "media" and re.search("S[0-9][0-9]*E[0-9][0-9]*", file) is None \
-                    and re.search("s[0-9][0-9]*e[0-9][0-9]*", file) is None:
+                                         or bool(re.search("s[0-9][0-9]*e[0-9][0-9]*", file))):
                     move = True
-                    break                            
+                    break
+                if type == "media" and re.search("S[0-9][0-9]*E[0-9][0-9]*", file) is None \
+                        and re.search("s[0-9][0-9]*e[0-9][0-9]*", file) is None:
+                    move = True
+                    break
             if move:
-                print(f"Moving ({media_directory_index+1}/{len(self.media_file_directories)}) {self.media_file_directories[media_directory_index]} to {target_directory}")
-                try:
+                if os.path.isdir(os.path.join(target_directory,
+                                              os.path.basename(self.media_file_directories[media_directory_index]))):
+                    print(f"\tMerging {type} ({media_directory_index + 1}/{len(self.media_file_directories)}) "
+                          f"{self.media_file_directories[media_directory_index]} to {target_directory}")
+                    for file_name in os.listdir(self.media_file_directories[media_directory_index]):
+                        # construct full file path
+                        source = os.path.normpath(
+                            os.path.join(self.media_file_directories[media_directory_index], file_name))
+                        destination = os.path.normpath(os.path.join(target_directory, os.path.basename(
+                            self.media_file_directories[media_directory_index])))
+                        # move only files
+                        if os.path.isfile(source):
+                            shutil.move(source, destination)
+                    if os.path.isdir(
+                            os.path.normpath(os.path.join(self.media_file_directories[media_directory_index], "Subs"))):
+                        subtitles = glob.glob(f"{self.media_file_directories[media_directory_index]}/Subs/*/",
+                                              recursive=True)
+                        for subtitle_directory in subtitles:
+                            shutil.move(f"{subtitle_directory}",
+                                        os.path.normpath(
+                                            os.path.join(target_directory,
+                                                         os.path.basename(
+                                                             self.media_file_directories[media_directory_index]),
+                                                         "Subs")))
+                        os.rmdir(os.path.normpath(os.path.join(self.media_file_directories[media_directory_index],
+                                                               "Subs")))
+                    os.rmdir(f"{self.media_file_directories[media_directory_index]}")
+                else:
+                    print(f"\tMoving {type} oppopd({media_directory_index + 1}/{len(self.media_file_directories)}) "
+                          f"{self.media_file_directories[media_directory_index]} to {target_directory}")
                     shutil.move(self.media_file_directories[media_directory_index], target_directory)
-                except Exception as e:
-                    print(f"\nUnable to move Media to {target_directory}. \nError: {e}")
-            
+
 
 def media_manager(argv):
     media_manager_instance = MediaManager()
     media_flag = False
     tv_flag = False
     subtitle_flag = False
-    tv_directory = f"{os.path.expanduser('~')}/Downloads"
-    media_directory = f"{os.path.expanduser('~')}/Downloads"
-    source_directory = f"{os.path.expanduser('~')}/Downloads"
+    tv_directory = os.path.join(os.path.expanduser('~'), "Downloads")
+    media_directory = os.path.join(os.path.expanduser('~'), "Downloads")
+    source_directory = os.path.join(os.path.expanduser('~'), "Downloads")
     try:
-        opts, args = getopt.getopt(argv, "hd:m:t:s", ["help", "media-directory=", "tv-directory=", "directory=", "subtitle"])
+        opts, args = getopt.getopt(argv, "hd:m:t:sv",
+                                   ["help", "media-directory=", "tv-directory=", "directory=", "subtitle", "verbose"])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
@@ -388,9 +447,11 @@ def media_manager(argv):
             tv_directory = arg
         elif opt in ("-s", "--subtitle"):
             subtitle_flag = True
+        elif opt in ("-v", "--verbose"):
+            media_manager_instance.set_verbose(quiet=False)
 
-    media_manager_instance.set_media_directory(media_directory=source_directory) 
-    media_manager_instance.find_media()   
+    media_manager_instance.set_media_directory(media_directory=source_directory)
+    media_manager_instance.find_media()
     media_manager_instance.set_subtitle(subtitle=subtitle_flag)
     media_manager_instance.clean_media()
 
