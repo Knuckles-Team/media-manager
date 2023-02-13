@@ -135,24 +135,24 @@ class MediaManager:
         if os.path.normpath(os.path.join(self.directory, ''))  == os.path.normpath(os.path.join(self.media_directory, '')) :
             # If parent folder does not exist, create it
             self.parent_directory = os.path.normpath(os.path.join(self.media_directory, self.folder_name, ''))            
-            if os.path.isdir(os.path.normpath(os.path.join(self.parent_directory, self.folder_name))):
-                for file_name in os.listdir(self.directory):
-                    if self.folder_name in file_name:
-                        # construct full file path
-                        source = os.path.normpath(os.path.join(self.directory, file_name))
-                        destination = os.path.normpath(os.path.join(self.parent_directory, self.folder_name, file_name))
-                        # move only files
-                        if os.path.isfile(source):
-                            shutil.move(source, destination)
+            if not os.path.isdir(os.path.normpath(os.path.join(self.parent_directory))):
+                os.makedirs(os.path.join(self.parent_directory, ''))     
+                print(f"\tCreated new parent directory: {os.path.join(self.parent_directory, '')}")
+            for file_name in os.listdir(self.directory):
+                if self.folder_name in file_name:
+                    # construct full file path
+                    source = os.path.normpath(os.path.join(self.directory, file_name))
+                    destination = os.path.normpath(os.path.join(self.parent_directory, self.folder_name, file_name))
+                    # move only files
+                    if os.path.isfile(source):
+                        shutil.move(source, destination)
                 if os.path.isdir(os.path.normpath(os.path.join(self.directory, "Subs"))):
                     subtitles = glob.glob(f"{self.directory}/Subs/*/", recursive=True)
                     for subtitle_directory in subtitles:
                         shutil.move(f"{subtitle_directory}", os.path.normpath(os.path.join(self.parent_directory, self.folder_name, "Subs")))
                     os.rmdir(os.path.normpath(os.path.join(self.directory, "Subs")))
                     os.rmdir(f"{self.directory}") 
-            else:   
-                os.makedirs(os.path.join(self.parent_directory, self.folder_name))     
-            print(f"\tCreated new parent directory: {os.path.join(self.parent_directory, self.folder_name, '')}")
+                print(f"\tMerging parent directories: {os.path.join(self.parent_directory, '')}")
         else:
             print(f"\tParent directory already exists: {self.directory}")
         self.directory = self.parent_directory
