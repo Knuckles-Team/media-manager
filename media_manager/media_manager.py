@@ -220,7 +220,8 @@ class MediaManager:
                         **{'metadata:g:0': f"title={self.new_file_name}",
                            'metadata:g:1': f"comment={self.new_file_name}"}) \
                 .overwrite_output() \
-                .run(quiet=self.quiet)
+                .run()
+                #.run(quiet=self.quiet)
             os.remove(self.new_media_file_path)
             os.rename(self.temporary_media_file_path, self.new_media_file_path)
             self.media_file_index = 0
@@ -401,7 +402,7 @@ def media_manager(argv):
         elif opt in ("-s", "--subtitle"):
             subtitle_flag = True
         elif opt in ("-v", "--verbose"):
-            media_manager_instance.set_verbose(False)
+            media_manager_instance.set_verbose(quiet=False)
 
     media_manager_instance.set_media_directory(media_directory=source_directory) 
     media_manager_instance.find_media()   
