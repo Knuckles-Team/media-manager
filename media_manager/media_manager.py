@@ -379,8 +379,27 @@ class MediaManager:
                     move = True
                     break
             if move:
-                print(f"Moving ({media_directory_index+1}/{len(self.media_file_directories)}) {self.media_file_directories[media_directory_index]} to {target_directory}")
-                shutil.move(self.media_file_directories[media_directory_index], target_directory)
+                if os.path.isdir(os.path.join(target_directory, os.path.basename(self.media_file_directories[media_directory_index]))):
+                    print(f"Merging ({media_directory_index + 1}/{len(self.media_file_directories)}) "
+                          f"{self.media_file_directories[media_directory_index]} to {target_directory}")
+                    for file_name in os.listdir(self.media_file_directories[media_directory_index]):
+                        # construct full file path
+                        source = os.path.normpath(os.path.join(self.media_file_directories[media_directory_index], file_name))
+                        destination = os.path.normpath(os.path.join(self.parent_directory, self.folder_name, file_name))
+                        # move only files
+                        if os.path.isfile(source):
+                            shutil.move(source, destination)
+                    if os.path.isdir(os.path.normpath(os.path.join(self.media_file_directories[media_directory_index], "Subs"))):
+                        subtitles = glob.glob(f"{self.media_file_directories[media_directory_index]}/Subs/*/", recursive=True)
+                        for subtitle_directory in subtitles:
+                            shutil.move(f"{subtitle_directory}",
+                                        os.path.normpath(os.path.join(self.parent_directory, self.folder_name, "Subs")))
+                        os.rmdir(os.path.normpath(os.path.join(self.media_file_directories[media_directory_index], "Subs")))
+                        os.rmdir(f"{self.media_file_directories[media_directory_index]}")
+                else:
+                    print(f"Moving ({media_directory_index+1}/{len(self.media_file_directories)}) "
+                          f"{self.media_file_directories[media_directory_index]} to {target_directory}")
+                    shutil.move(self.media_file_directories[media_directory_index], target_directory)
 
 
 def media_manager(argv):
