@@ -26,6 +26,7 @@ class MediaManager:
         self.new_file_name = ""
         self.new_media_file_path = ""
         self.temporary_media_file_path = ""
+        self.quiet = True
         self.movie_filters = {
             f"2160p.*$": f"2160p",
             f"1080p.*$": f"1080p",
@@ -92,6 +93,9 @@ class MediaManager:
         self.series = False
         self.subtitle = False
         self.media_file_index = 0
+
+    def set_verbose(self, quiet=True):
+        self.quiet = quiet
 
     def set_subtitle(self, subtitle: bool):
         self.subtitle = subtitle
@@ -216,7 +220,7 @@ class MediaManager:
                         **{'metadata:g:0': f"title={self.new_file_name}",
                            'metadata:g:1': f"comment={self.new_file_name}"}) \
                 .overwrite_output() \
-                .run(quiet=True)
+                .run(quiet=self.quiet)
             os.remove(self.new_media_file_path)
             os.rename(self.temporary_media_file_path, self.new_media_file_path)
             self.media_file_index = 0
@@ -261,7 +265,7 @@ class MediaManager:
                     **{'metadata:g:0': f"title={self.new_file_name}", 'metadata:g:1': f"comment={self.new_file_name}",
                        'metadata:s:s:0': "language=" + "en", 'metadata:s:s:0': "title=" + "English",
                        'metadata:s:s:1': "language=" + "sp", 'metadata:s:s:1': "title=" + "Spanish"}
-                ).overwrite_output().run(quiet=True)
+                ).overwrite_output().run(quiet=self.quiet)
                 os.remove(self.new_media_file_path)
                 os.rename(self.temporary_media_file_path, self.new_media_file_path)
             elif not subtitle_exists and not os.path.isfile(subtitle_file):
@@ -272,7 +276,7 @@ class MediaManager:
                             **{'metadata:g:0': f"title={self.new_file_name}",
                                'metadata:g:1': f"comment={self.new_file_name}"}) \
                     .overwrite_output() \
-                    .run(quiet=True)
+                    .run(quiet=self.quiet)
                 os.remove(self.new_media_file_path)
                 os.rename(self.temporary_media_file_path, self.new_media_file_path)
             self.media_file_index += 1
@@ -378,7 +382,7 @@ def media_manager(argv):
     media_directory = os.path.join(os.path.expanduser('~'), "Downloads")
     source_directory = os.path.join(os.path.expanduser('~'), "Downloads")
     try:
-        opts, args = getopt.getopt(argv, "hd:m:t:s", ["help", "media-directory=", "tv-directory=", "directory=", "subtitle"])
+        opts, args = getopt.getopt(argv, "hd:m:t:sv", ["help", "media-directory=", "tv-directory=", "directory=", "subtitle", "verbose"])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
@@ -396,6 +400,8 @@ def media_manager(argv):
             tv_directory = arg
         elif opt in ("-s", "--subtitle"):
             subtitle_flag = True
+        elif opt in ("-v", "--verbose"):
+            media_manager_instance.set_verbose(False)
 
     media_manager_instance.set_media_directory(media_directory=source_directory) 
     media_manager_instance.find_media()   
