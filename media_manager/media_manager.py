@@ -134,7 +134,7 @@ class MediaManager:
         print(f"\tVerifying if Media is Missing Parent Folder:\n\t\t{os.path.normpath(os.path.join(self.directory, ''))}\n\t\t{os.path.normpath(os.path.join(self.media_directory, self.folder_name, ''))}")
         if os.path.normpath(os.path.join(self.directory, ''))  == os.path.normpath(os.path.join(self.media_directory, '')) :
             # If parent folder does not exist, create it
-            self.parent_directory = os.path.normpath(os.path.join(self.parent_directory, self.folder_name, ''))            
+            self.parent_directory = os.path.normpath(os.path.join(self.media_directory, self.folder_name, ''))            
             if os.path.isdir(os.path.normpath(os.path.join(self.parent_directory, self.folder_name))):
                 for file_name in os.listdir(self.directory):
                     if self.folder_name in file_name:
