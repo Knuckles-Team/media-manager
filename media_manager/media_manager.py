@@ -183,14 +183,11 @@ class MediaManager:
     # Rename file
     def rename_file(self):
         print("\tRenaming file...")
-        old_file_path = os.path.normpath(os.path.join(self.parent_directory,
-                                                      self.folder_name,
+        old_file_path = os.path.normpath(os.path.join(self.directory,
                                                       f"{self.file_name}{self.file_extension}"))
-        self.new_media_file_path = os.path.normpath(os.path.join(self.parent_directory,
-                                                                 self.folder_name,
+        self.new_media_file_path = os.path.normpath(os.path.join(self.directory,
                                                                  f"{self.new_file_name}{self.file_extension}"))
-        self.temporary_media_file_path = os.path.normpath(os.path.join(self.parent_directory,
-                                                                       self.folder_name,
+        self.temporary_media_file_path = os.path.normpath(os.path.join(self.directory,
                                                                        f"temp-{self.new_file_name}{self.file_extension}"))
         # Check if media file name is the same as what is proposed
         self.file_name, self.file_extension = os.path.splitext(self.media_file)
