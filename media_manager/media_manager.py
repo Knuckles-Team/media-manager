@@ -416,7 +416,10 @@ class MediaManager:
                 else:
                     print(f"\tMoving {type} oppopd({media_directory_index + 1}/{len(self.media_file_directories)}) "
                           f"{self.media_file_directories[media_directory_index]} to {target_directory}")
-                    shutil.move(self.media_file_directories[media_directory_index], target_directory)
+                    try:
+                        shutil.move(self.media_file_directories[media_directory_index], target_directory)
+                    except Exceptions as e:
+                        print(f"\nUnable to move to target directory: {target_directory}]\nError: {e}")
 
 
 def media_manager(argv):
