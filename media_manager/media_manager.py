@@ -158,9 +158,11 @@ class MediaManager:
                     os.rmdir(os.path.normpath(os.path.join(self.directory, "Subs")))
                     os.rmdir(f"{self.directory}")
                 print(f"\tMerging parent directories: {os.path.join(self.parent_directory, '')}")
+            self.directory = self.parent_directory
+            self.parent_directory = os.path.join(self.parent_directory, os.pardir)
         else:
             print(f"\tParent directory already exists: {self.directory}")
-        self.directory = self.parent_directory
+            self.directory = self.parent_directory
 
     # Rediscover cleaned media
     def find_media(self):
