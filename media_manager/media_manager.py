@@ -418,7 +418,7 @@ class MediaManager:
                           f"{self.media_file_directories[media_directory_index]} to {target_directory}")
                     try:
                         shutil.move(self.media_file_directories[media_directory_index], target_directory)
-                    except Exceptions as e:
+                    except Exception as e:
                         print(f"\nUnable to move to target directory: {target_directory}]\nError: {e}")
 
 
