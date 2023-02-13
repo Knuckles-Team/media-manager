@@ -388,7 +388,7 @@ class MediaManager:
             if move:
                 if os.path.isdir(os.path.join(target_directory,
                                               os.path.basename(self.media_file_directories[media_directory_index]))):
-                    print(f"\tMerging ({media_directory_index + 1}/{len(self.media_file_directories)}) "
+                    print(f"\tMerging {type} ({media_directory_index + 1}/{len(self.media_file_directories)}) "
                           f"{self.media_file_directories[media_directory_index]} to {target_directory}")
                     for file_name in os.listdir(self.media_file_directories[media_directory_index]):
                         # construct full file path
@@ -414,7 +414,7 @@ class MediaManager:
                                                                "Subs")))
                     os.rmdir(f"{self.media_file_directories[media_directory_index]}")
                 else:
-                    print(f"\tMoving ({media_directory_index + 1}/{len(self.media_file_directories)}) "
+                    print(f"\tMoving {type} oppopd({media_directory_index + 1}/{len(self.media_file_directories)}) "
                           f"{self.media_file_directories[media_directory_index]} to {target_directory}")
                     shutil.move(self.media_file_directories[media_directory_index], target_directory)
 
