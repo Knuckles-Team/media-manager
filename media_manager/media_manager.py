@@ -213,7 +213,8 @@ class MediaManager:
         else:
             current_title_metadata = ""
         if current_title_metadata != self.new_file_name and self.subtitle is False:
-            ffmpeg.input(self.new_media_file_path) \
+            try:
+                out, err = ffmpeg.input(self.new_media_file_path) \
                 .output(self.temporary_media_file_path,
                         map_metadata=0,
                         map=0, vcodec='copy', acodec='copy',
@@ -221,7 +222,8 @@ class MediaManager:
                            'metadata:g:1': f"comment={self.new_file_name}"}) \
                 .overwrite_output() \
                 .run()
-                #.run(quiet=self.quiet)
+            except ffmpeg.Error as e:
+                print(f"Error Processing File Metadata:\n{e.stdout}Error:\n{e.stderr}")
             os.remove(self.new_media_file_path)
             os.rename(self.temporary_media_file_path, self.new_media_file_path)
             self.media_file_index = 0
