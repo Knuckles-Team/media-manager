@@ -377,7 +377,7 @@ class MediaManager:
                 move = False
                 if not os.path.exists(file):
                     continue
-                if type == "series" and (bool(re.search("S[0-9][0-9]*E[0-9][0-9]*", file)) \
+                if type == "series" and (bool(re.search("S[0-9][0-9]*E[0-9][0-9]*", file))
                                          or bool(re.search("s[0-9][0-9]*e[0-9][0-9]*", file))):
                     move = True
                     break
