@@ -19,6 +19,7 @@ Supports Media:
 | -m         | --media-directory      | Move media to directory                     |
 | -t         | --tv-directory         | Move series to directory                    |
 | -d         | --directory            | Directory to scan for media                 |
+| -v         | --verbose              | Show Output of FFMPEG                       |
 
 
 ### Example:
