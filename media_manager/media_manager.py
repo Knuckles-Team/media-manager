@@ -187,7 +187,9 @@ class MediaManager:
                 os.remove(file)
         self.media_files.sort()
         for i in self.completed_media_files:
+            print(f"\t\tVerifying completed: {i}")
             if i in self.media_files:
+                print(f"\t\tRemoving completed: {i}")
                 self.media_files.remove(i)
         print(f"\tMedia Found! ({len(self.media_file_directories)} files)")
 
@@ -251,7 +253,7 @@ class MediaManager:
                     .run(quiet=self.quiet)
             except Exception as e:
                 try:
-                    print(f"\t\tTrying to remap using alternative method...\n\tError: {e}")
+                    print(f"\t\tTrying to remap using alternative method...\n\t\tError: {e}")
                     ffmpeg.input(self.new_media_file_path) \
                     .output(self.temporary_media_file_path,
                             map_metadata=0, vcodec='copy', acodec='copy',
@@ -260,7 +262,7 @@ class MediaManager:
                     .overwrite_output() \
                     .run(quiet=self.quiet)
                 except Exception as e:
-                    print(f"\t\tError trying to remap using alternative method...\n\tError: {e}")
+                    print(f"\t\tError trying to remap using alternative method...\n\t\tError: {e}")
             os.remove(self.new_media_file_path)
             os.rename(self.temporary_media_file_path, self.new_media_file_path)
             self.completed_media_files.append(self.media_files[self.media_file_index])
