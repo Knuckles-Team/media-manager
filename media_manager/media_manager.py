@@ -465,8 +465,8 @@ class MediaManager:
                         print(f"\t\tSkipping removal of "
                               f"{self.media_file_directories[media_directory_index]}...")
                 else:
-                    print(f"\tMoving {type}({media_directory_index + 1}/{len(self.media_file_directories)}) "
-                          f"{self.media_file_directories[media_directory_index]} to {target_directory}")
+                    print(f"\tMoving {type}({media_directory_index + 1}/{len(self.media_file_directories)})\n\t\t"
+                          f"{self.media_file_directories[media_directory_index]}\n\t\t==>\n\t\t{target_directory}")
                     try:
                         shutil.move(self.media_file_directories[media_directory_index], target_directory)
                     except Exception as e:
