@@ -16,7 +16,6 @@ class MediaManager:
         self.media_files = []
         self.completed_media_files = []
         self.media_file_directories = []
-        self.completed_media_file_directories = []
         self.media_directory = ""
         self.directory = ""
         self.parent_directory = ""
@@ -190,9 +189,6 @@ class MediaManager:
         for i in self.completed_media_files:
             if i in self.media_files:
                 self.media_files.remove(i)
-        for i in self.completed_media_file_directories:
-            if i in self.media_file_directories:
-                self.media_file_directories.remove(i)
         print(f"\tMedia Found! ({len(self.media_file_directories)} files)")
 
     # Rename file
@@ -215,7 +211,7 @@ class MediaManager:
             self.file_name = self.new_file_name
             self.media_files[self.media_file_index] = self.new_media_file_path
             self.media_file_index = 0
-            print(f"\tFile Renamed: {old_file_path} ==> {self.new_media_file_path}")
+            print(f"\tFile Renamed: \n\t\t{old_file_path} \n\t\t\t==> \n\t\t{self.new_media_file_path}")
 
     # Clean Subtitle directories
     def clean_subtitle_directory(self, subtitle_directory: str):
@@ -326,7 +322,7 @@ class MediaManager:
         # Check if media folder name is the same as what is proposed
         if os.path.normpath(os.path.join(self.directory, '')) != os.path.normpath(
                 os.path.join(self.parent_directory, self.folder_name, '')):
-            print(f"\tRenaming directory: {os.path.normpath(os.path.join(self.directory, ''))} ==> "
+            print(f"\tRenaming directory: \n\t\t{os.path.normpath(os.path.join(self.directory, ''))} \n\t\t\t==>\n\t\t"
                   f"{os.path.normpath(os.path.join(self.parent_directory, self.folder_name, ''))}")
             if os.path.isdir(os.path.normpath(os.path.join(self.parent_directory, self.folder_name))):
                 for file_name in os.listdir(self.directory):
@@ -347,7 +343,6 @@ class MediaManager:
             else:
                 os.rename(os.path.normpath(os.path.join(self.directory, '')),
                           os.path.normpath(os.path.join(self.parent_directory, self.folder_name)))
-            self.completed_media_file_directories.append(self.media_file_directories[self.media_file_index])
             self.find_media()
             self.media_file_index = 0
         else:
@@ -391,14 +386,13 @@ class MediaManager:
         if not os.path.isdir(target_directory):
             print(f"\nDirectory {target_directory} does not exist")
             return
-        # self.completed_media_files = []
-        # self.completed_media_file_directories = []
-        #self.find_media()
-        print(f"\nMoving {type} ({len(self.completed_media_file_directories)})...")
-        for media_directory_index in range(0, len(self.completed_media_file_directories)):
+        self.completed_media_files = []
+        self.find_media()
+        print(f"\nMoving {type} ({len(self.media_file_directories)})...")
+        for media_directory_index in range(0, len(self.media_file_directories)):
             # Find if file inside this directory is named as a series
             move = False
-            files = glob.glob(f"{self.completed_media_file_directories[media_directory_index]}/*", recursive=True)
+            files = glob.glob(f"{self.media_file_directories[media_directory_index]}/*", recursive=True)
             for file in files:
                 move = False
                 if not os.path.exists(file):
@@ -415,17 +409,17 @@ class MediaManager:
                 if os.path.isdir(
                         os.path.join(
                             target_directory,
-                            os.path.basename(self.completed_media_file_directories[media_directory_index])
+                            os.path.basename(self.media_file_directories[media_directory_index])
                         )
                 ):
-                    print(f"\tMerging {type} ({media_directory_index + 1}/{len(self.completed_media_file_directories)}) "
-                          f"{self.completed_media_file_directories[media_directory_index]} to {target_directory}")
-                    for file_name in os.listdir(self.completed_media_file_directories[media_directory_index]):
+                    print(f"\tMerging {type} ({media_directory_index + 1}/{len(self.media_file_directories)}) "
+                          f"{self.media_file_directories[media_directory_index]} to {target_directory}")
+                    for file_name in os.listdir(self.media_file_directories[media_directory_index]):
                         # construct full file path
                         source = os.path.normpath(
-                            os.path.join(self.completed_media_file_directories[media_directory_index], file_name))
+                            os.path.join(self.media_file_directories[media_directory_index], file_name))
                         destination = os.path.normpath(os.path.join(target_directory, os.path.basename(
-                            self.completed_media_file_directories[media_directory_index])))
+                            self.media_file_directories[media_directory_index])))
                         # move only files
                         if os.path.isfile(source):
                             if os.path.isfile(destination):
@@ -439,11 +433,11 @@ class MediaManager:
                     if os.path.isdir(
                             os.path.normpath(
                                 os.path.join(
-                                    self.completed_media_file_directories[media_directory_index],
+                                    self.media_file_directories[media_directory_index],
                                     "Subs")
                             )
                     ):
-                        subtitles = glob.glob(f"{self.completed_media_file_directories[media_directory_index]}/Subs/*/",
+                        subtitles = glob.glob(f"{self.media_file_directories[media_directory_index]}/Subs/*/",
                                               recursive=True)
                         for subtitle_directory in subtitles:
                             shutil.move(
@@ -451,7 +445,7 @@ class MediaManager:
                                 os.path.normpath(
                                     os.path.join(
                                         target_directory,
-                                        os.path.basename(self.completed_media_file_directories[media_directory_index]),
+                                        os.path.basename(self.media_file_directories[media_directory_index]),
                                         "Subs"
                                     )
                                 )
@@ -459,22 +453,22 @@ class MediaManager:
                         shutil.rmtree(
                             os.path.normpath(
                                 os.path.join(
-                                    self.completed_media_file_directories[media_directory_index],
+                                    self.media_file_directories[media_directory_index],
                                     "Subs"
                                 )
                             ), 
                             ignore_errors=True
                         )
                     try:
-                        os.rmdir(f"{self.completed_media_file_directories[media_directory_index]}")
+                        os.rmdir(f"{self.media_file_directories[media_directory_index]}")
                     except OSError:
                         print(f"\t\tSkipping removal of "
-                              f"{self.completed_media_file_directories[media_directory_index]}...")
+                              f"{self.media_file_directories[media_directory_index]}...")
                 else:
-                    print(f"\tMoving {type}({media_directory_index + 1}/{len(self.completed_media_file_directories)}) "
-                          f"{self.completed_media_file_directories[media_directory_index]} to {target_directory}")
+                    print(f"\tMoving {type}({media_directory_index + 1}/{len(self.media_file_directories)}) "
+                          f"{self.media_file_directories[media_directory_index]} to {target_directory}")
                     try:
-                        shutil.move(self.completed_media_file_directories[media_directory_index], target_directory)
+                        shutil.move(self.media_file_directories[media_directory_index], target_directory)
                     except Exception as e:
                         print(f"\nUnable to move to target directory: {target_directory}]\n\t\tError: {e}")
 
