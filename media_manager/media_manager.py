@@ -312,6 +312,7 @@ class MediaManager:
             self.completed_media_files.append(self.media_files[self.media_file_index])
             self.media_file_index = 0
         else:
+            self.completed_media_files.append(self.media_files[self.media_file_index])
             self.media_file_index += 1
         print(f"\tMetadata Updated: {os.path.basename(self.new_media_file_path)}")
 
@@ -350,6 +351,7 @@ class MediaManager:
             self.find_media()
             self.media_file_index = 0
         else:
+            self.completed_media_file_directories.append(self.media_file_directories[self.media_file_index])
             print(f"\tRenaming directory not needed: {os.path.normpath(os.path.join(self.directory, ''))}")
 
     # Cleanup Variables
@@ -393,7 +395,7 @@ class MediaManager:
         # self.completed_media_files = []
         # self.completed_media_file_directories = []
         #self.find_media()
-        print(f"\nMoving {type}...")
+        print(f"\nMoving {type} ({len(self.completed_media_file_directories)})...")
         for media_directory_index in range(0, len(self.completed_media_file_directories)):
             # Find if file inside this directory is named as a series
             move = False
