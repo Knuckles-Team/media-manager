@@ -416,7 +416,7 @@ class MediaManager:
                                                                "Subs")))
                     os.rmdir(f"{self.media_file_directories[media_directory_index]}")
                 else:
-                    print(f"\tMoving {type} oppopd({media_directory_index + 1}/{len(self.media_file_directories)}) "
+                    print(f"\tMoving {type}({media_directory_index + 1}/{len(self.media_file_directories)}) "
                           f"{self.media_file_directories[media_directory_index]} to {target_directory}")
                     try:
                         shutil.move(self.media_file_directories[media_directory_index], target_directory)
