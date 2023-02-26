@@ -389,8 +389,8 @@ class MediaManager:
         if not os.path.isdir(target_directory):
             print(f"\nDirectory {target_directory} does not exist")
             return
-        self.completed_media_files = []
-        self.completed_media_file_directories = []
+        # self.completed_media_files = []
+        # self.completed_media_file_directories = []
         #self.find_media()
         print(f"\nMoving {type}...")
         for media_directory_index in range(0, len(self.completed_media_file_directories)):
