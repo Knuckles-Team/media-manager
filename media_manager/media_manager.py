@@ -250,6 +250,7 @@ class MediaManager:
                 .run(quiet=self.quiet)
             os.remove(self.new_media_file_path)
             os.rename(self.temporary_media_file_path, self.new_media_file_path)
+            self.completed_media_files.append(self.media_files[self.media_file_index])
             self.media_file_index = 0
         elif current_title_metadata != self.new_file_name and self.subtitle is True:
             subtitle_file = "English.srt"
@@ -308,7 +309,8 @@ class MediaManager:
                     .run(quiet=self.quiet)
                 os.remove(self.new_media_file_path)
                 os.rename(self.temporary_media_file_path, self.new_media_file_path)
-            self.media_file_index += 1
+            self.completed_media_files.append(self.media_files[self.media_file_index])
+            self.media_file_index = 0
         else:
             self.media_file_index += 1
         print(f"\tMetadata Updated: {os.path.basename(self.new_media_file_path)}")
@@ -344,6 +346,7 @@ class MediaManager:
             else:
                 os.rename(os.path.normpath(os.path.join(self.directory, '')),
                           os.path.normpath(os.path.join(self.parent_directory, self.folder_name)))
+            self.completed_media_file_directories.append(self.media_file_directories[self.media_file_index])
             self.find_media()
             self.media_file_index = 0
         else:
@@ -380,8 +383,6 @@ class MediaManager:
             self.clean_subtitle_directory(subtitle_directory=f"{self.parent_directory}/{self.folder_name}/Subs")
             self.set_media_metadata()
             self.rename_directory()
-            self.completed_media_files.append(self.media_files[self.media_file_index])
-            self.completed_media_file_directories.append(self.media_file_directories[self.media_file_index])
         self.reset_variables()
 
     # Move media to new destination
