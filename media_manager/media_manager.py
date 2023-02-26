@@ -236,10 +236,20 @@ class MediaManager:
         else:
             current_title_metadata = ""
         if current_title_metadata != self.new_file_name and self.subtitle is False:
-            ffmpeg.input(self.new_media_file_path) \
+            try:
+                ffmpeg.input(self.new_media_file_path) \
+                    .output(self.temporary_media_file_path,
+                            map_metadata=0,
+                            map=0, vcodec='copy', acodec='copy',
+                            **{'metadata:g:0': f"title={self.new_file_name}",
+                            'metadata:g:1': f"comment={self.new_file_name}"}) \
+                    .overwrite_output() \
+                    .run(quiet=self.quiet)
+            except Exception as e:
+                print(f"\t\tTrying to remap using alternative method...\n\tError: {e}")
+                ffmpeg.input(self.new_media_file_path) \
                 .output(self.temporary_media_file_path,
-                        map_metadata=0,
-                        map=0, vcodec='copy', acodec='copy',
+                        map_metadata=0, vcodec='copy', acodec='copy',
                         **{'metadata:g:0': f"title={self.new_file_name}",
                            'metadata:g:1': f"comment={self.new_file_name}"}) \
                 .overwrite_output() \
