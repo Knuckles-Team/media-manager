@@ -211,7 +211,7 @@ class MediaManager:
             self.file_name = self.new_file_name
             self.media_files[self.media_file_index] = self.new_media_file_path
             self.media_file_index = 0
-            print(f"\tFile Renamed: \n\t\t{old_file_path} \n\t\t\t==> \n\t\t{self.new_media_file_path}")
+            print(f"\tFile Renamed: \n\t\t{old_file_path} \n\t\t==> \n\t\t{self.new_media_file_path}")
 
     # Clean Subtitle directories
     def clean_subtitle_directory(self, subtitle_directory: str):
@@ -322,7 +322,7 @@ class MediaManager:
         # Check if media folder name is the same as what is proposed
         if os.path.normpath(os.path.join(self.directory, '')) != os.path.normpath(
                 os.path.join(self.parent_directory, self.folder_name, '')):
-            print(f"\tRenaming directory: \n\t\t{os.path.normpath(os.path.join(self.directory, ''))} \n\t\t\t==>\n\t\t"
+            print(f"\tRenaming directory: \n\t\t{os.path.normpath(os.path.join(self.directory, ''))} \n\t\t==>\n\t\t"
                   f"{os.path.normpath(os.path.join(self.parent_directory, self.folder_name, ''))}")
             if os.path.isdir(os.path.normpath(os.path.join(self.parent_directory, self.folder_name))):
                 for file_name in os.listdir(self.directory):
