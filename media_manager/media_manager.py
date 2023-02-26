@@ -231,10 +231,14 @@ class MediaManager:
     # Check if media metadata title is the same as what is proposed
     def set_media_metadata(self):
         print(f"\tUpdating metadata for {os.path.basename(self.new_media_file_path)}...")
-        if "title" in ffmpeg.probe(self.new_media_file_path)['format']['tags']:
-            current_title_metadata = ffmpeg.probe(self.new_media_file_path)['format']['tags']['title']
-        else:
+        try:
+            if "title" in ffmpeg.probe(self.new_media_file_path)['format']['tags']:
+                current_title_metadata = ffmpeg.probe(self.new_media_file_path)['format']['tags']['title']
+            else:
+                current_title_metadata = ""
+        except Exception as e:
             current_title_metadata = ""
+            print(f"Error reading metadata: {e}")
         if current_title_metadata != self.new_file_name and self.subtitle is False:
             try:
                 ffmpeg.input(self.new_media_file_path) \
@@ -246,14 +250,17 @@ class MediaManager:
                     .overwrite_output() \
                     .run(quiet=self.quiet)
             except Exception as e:
-                print(f"\t\tTrying to remap using alternative method...\n\tError: {e}")
-                ffmpeg.input(self.new_media_file_path) \
-                .output(self.temporary_media_file_path,
-                        map_metadata=0, vcodec='copy', acodec='copy',
-                        **{'metadata:g:0': f"title={self.new_file_name}",
-                           'metadata:g:1': f"comment={self.new_file_name}"}) \
-                .overwrite_output() \
-                .run(quiet=self.quiet)
+                try:
+                    print(f"\t\tTrying to remap using alternative method...\n\tError: {e}")
+                    ffmpeg.input(self.new_media_file_path) \
+                    .output(self.temporary_media_file_path,
+                            map_metadata=0, vcodec='copy', acodec='copy',
+                            **{'metadata:g:0': f"title={self.new_file_name}",
+                            'metadata:g:1': f"comment={self.new_file_name}"}) \
+                    .overwrite_output() \
+                    .run(quiet=self.quiet)
+                except Exception as e:
+                    print(f"\t\tError trying to remap using alternative method...\n\tError: {e}")
             os.remove(self.new_media_file_path)
             os.rename(self.temporary_media_file_path, self.new_media_file_path)
             self.completed_media_files.append(self.media_files[self.media_file_index])
