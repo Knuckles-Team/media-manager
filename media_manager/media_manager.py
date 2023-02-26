@@ -402,7 +402,13 @@ class MediaManager:
                             self.media_file_directories[media_directory_index])))
                         # move only files
                         if os.path.isfile(source):
-                            shutil.move(source, destination)
+                            if os.path.isfile(destination):
+                                print(f"\t\tFile already exists {destination}, skipping...")
+                            else:
+                                try:
+                                    shutil.move(source, destination)
+                                except Exception as e:
+                                    print(f"\nUnable to move to target directory: {target_directory}]\nError: {e}")
                     if os.path.isdir(
                             os.path.normpath(os.path.join(self.media_file_directories[media_directory_index], "Subs"))):
                         subtitles = glob.glob(f"{self.media_file_directories[media_directory_index]}/Subs/*/",
