@@ -420,9 +420,19 @@ class MediaManager:
                                                          os.path.basename(
                                                              self.media_file_directories[media_directory_index]),
                                                          "Subs")))
-                        os.rmdir(os.path.normpath(os.path.join(self.media_file_directories[media_directory_index],
-                                                               "Subs")))
-                    os.rmdir(f"{self.media_file_directories[media_directory_index]}")
+                        shutil.rmtree(
+                            os.path.normpath(
+                                os.path.join(
+                                    self.media_file_directories[media_directory_index],
+                                    "Subs"
+                                )
+                            ), 
+                            ignore_errors=True
+                        )
+                    try:
+                        os.rmdir(f"{self.media_file_directories[media_directory_index]}")
+                    except OSError:
+                        print(f"Skipping removal of {self.media_file_directories[media_directory_index]}...")
                 else:
                     print(f"\tMoving {type}({media_directory_index + 1}/{len(self.media_file_directories)}) "
                           f"{self.media_file_directories[media_directory_index]} to {target_directory}")
