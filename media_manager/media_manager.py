@@ -310,7 +310,7 @@ class MediaManager:
                 os.remove(self.new_media_file_path)
                 os.rename(self.temporary_media_file_path, self.new_media_file_path)
             self.completed_media_files.append(self.media_files[self.media_file_index])
-            self.media_file_index = 0
+            self.media_file_index += 1
         else:
             self.completed_media_files.append(self.media_files[self.media_file_index])
             self.media_file_index += 1
