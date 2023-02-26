@@ -38,6 +38,7 @@ class MediaManager:
             f"UNCUT.": f"",
             f"UNRATED.": f"",
             f"EXTENDED.": f"",
+            f"IMAX.": f"",
             f"PROPER.": f"",
             f"THEATRICAL.": f"",
             f"CRITERION.": f"",
