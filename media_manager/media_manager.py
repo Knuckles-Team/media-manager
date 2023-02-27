@@ -186,6 +186,8 @@ class MediaManager:
             elif file.endswith(".nfo") or file.endswith(".txt") or file.endswith(".exe"):
                 os.remove(file)
         self.media_files.sort()
+        if not self.quiet:
+            print(f"Completed: {self.completed_media_files}\nDetected: {self.media_files}")
         for i in self.completed_media_files:
             print(f"\t\tVerifying completed: {i}")
             if i in self.media_files:
