@@ -367,6 +367,7 @@ class MediaManager:
             self.find_media()
             self.media_file_index = 0
         else:
+            self.find_media()
             print(f"\tRenaming directory not needed: {os.path.normpath(os.path.join(self.directory, ''))}")
 
     # Cleanup Variables
