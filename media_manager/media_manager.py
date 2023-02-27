@@ -98,6 +98,12 @@ class MediaManager:
         self.series = False
         self.subtitle = False
         self.media_file_index = 0
+        try:
+            columns, rows = os.get_terminal_size(0)
+        except Exception as e:
+            columns = 50
+        self.terminal_width = columns
+        self.max_file_length = self.terminal_width - 50
 
     def set_verbose(self, quiet=True):
         self.quiet = quiet
@@ -400,8 +406,8 @@ class MediaManager:
         while self.media_file_index < len(self.media_files):
             file_length = len(str(os.path.basename(self.media_files[self.media_file_index])))
             truncate_amount = 0
-            if file_length > 45:
-                truncate_amount = abs(45 - file_length)
+            if file_length > self.max_file_length:
+                truncate_amount = abs(self.max_file_length - file_length)
             print(f"Processing ({self.total_media_files - len(self.media_files) + 1}/{self.total_media_files}): "
                   f"{str(os.path.basename(self.media_files[self.media_file_index]))[truncate_amount:file_length]}", end='\r')
             self.directory = os.path.normpath(os.path.dirname(self.media_files[self.media_file_index]))
@@ -445,8 +451,8 @@ class MediaManager:
                     break
             file_length = len(str(os.path.basename(self.media_file_directories[media_directory_index])))
             truncate_amount = 0
-            if file_length > 45:
-                truncate_amount = abs(45 - file_length)
+            if file_length > self.max_file_length:
+                truncate_amount = abs(self.max_file_length - file_length)
             if move:
                 if os.path.isdir(
                         os.path.join(
@@ -454,10 +460,13 @@ class MediaManager:
                             os.path.basename(self.media_file_directories[media_directory_index])
                         )
                 ):
-                    print(f"Merging {media_type} ({len(self.media_file_directories)}/{self.total_media_files})\n\t\t"
-                          f"{str(os.path.basename(self.media_file_directories[media_directory_index]))[truncate_amount:file_length]} "
-                          f"==> {target_directory}",
-                          end='\r')
+                    media_directory = str(os.path.basename(self.media_file_directories[media_directory_index]))[truncate_amount:file_length]
+                    merging_message = f"Merging {media_type} " \
+                                      f"({len(self.media_file_directories)}/{self.total_media_files}) " \
+                                      f"{media_directory} " \
+                                      f"==> {target_directory}"
+                    merging_message = merging_message.ljust(self.terminal_width)
+                    print(merging_message, end='\r')
                     for file_name in os.listdir(self.media_file_directories[media_directory_index]):
                         # construct full file path
                         source = os.path.normpath(
@@ -509,10 +518,13 @@ class MediaManager:
                         self.print(f"\t\tSkipping removal of "
                               f"{self.media_file_directories[media_directory_index]}...")
                 else:
-                    print(f"Moving {media_type} ({len(self.media_file_directories)}/{self.total_media_files})\n\t\t"
-                          f"{str(os.path.basename(self.media_file_directories[media_directory_index]))[truncate_amount:file_length]} "
-                          f"==> {target_directory}",
-                          end='\r')
+                    media_directory = str(os.path.basename(self.media_file_directories[media_directory_index]))[truncate_amount:file_length]
+                    moving_message = f"Moving {media_type} " \
+                                     f"({len(self.media_file_directories)}/{self.total_media_files}) " \
+                                     f"{media_directory} " \
+                                     f"==> {target_directory}"
+                    moving_message = moving_message.ljust(self.terminal_width)
+                    print(moving_message, end='\r')
                     try:
                         shutil.move(self.media_file_directories[media_directory_index], target_directory)
                     except Exception as e:
