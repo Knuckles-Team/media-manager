@@ -189,9 +189,9 @@ class MediaManager:
         if not self.quiet:
             print(f"Completed: {self.completed_media_files}\nDetected: {self.media_files}")
         for i in self.completed_media_files:
-            print(f"\t\tVerifying completed: {i}")
+            #print(f"\t\tVerifying completed: {i}")
             if i in self.media_files:
-                print(f"\t\tRemoving completed: {i}")
+                #print(f"\t\tRemoving completed: {i}")
                 self.media_files.remove(i)
         print(f"\tMedia Found! ({len(self.media_file_directories)} files)")
 
