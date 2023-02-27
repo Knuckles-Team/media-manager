@@ -398,12 +398,12 @@ class MediaManager:
     # Iterate through all media files found
     def clean_media(self):
         while self.media_file_index < len(self.media_files):
-            file_length = len(self.media_files[self.media_file_index])
+            file_length = len(str(os.path.basename(self.media_files[self.media_file_index])))
             truncate_amount = 0
             if file_length > 45:
                 truncate_amount = abs(45 - file_length)
-            print(f"Processing ({self.total_media_files - len(self.media_files)}/{self.total_media_files}): "
-                  f"{self.media_files[self.media_file_index][truncate_amount:file_length]}", end='\r')
+            print(f"Processing ({self.total_media_files - len(self.media_files) + 1}/{self.total_media_files}): "
+                  f"{str(os.path.basename(self.media_files[self.media_file_index]))[truncate_amount:file_length]}", end='\r')
             self.directory = os.path.normpath(os.path.dirname(self.media_files[self.media_file_index]))
             if not self.directory.endswith(os.path.sep):
                 self.directory += os.path.sep
@@ -426,7 +426,7 @@ class MediaManager:
             return
         self.completed_media_files = []
         self.find_media()
-        print(f"\nMoving {media_type} ({len(self.media_file_directories)})...")
+        self.print(f"\nMoving {media_type} ({len(self.media_file_directories)})...")
         for media_directory_index in range(0, len(self.media_file_directories)):
             # Find if file inside this directory is named as a series
             move = False
@@ -443,7 +443,7 @@ class MediaManager:
                         and re.search("s[0-9][0-9]*e[0-9][0-9]*", file) is None:
                     move = True
                     break
-            file_length = len(self.media_file_directories[media_directory_index])
+            file_length = len(str(os.path.basename(self.media_file_directories[media_directory_index])))
             truncate_amount = 0
             if file_length > 45:
                 truncate_amount = abs(45 - file_length)
@@ -454,10 +454,10 @@ class MediaManager:
                             os.path.basename(self.media_file_directories[media_directory_index])
                         )
                 ):
-                    print(f"\tMerging {media_type} ({len(self.media_file_directories)}/{self.total_media_files})\n\t\t"
-                          f"{self.media_file_directories[media_directory_index][truncate_amount:file_length]}\n\t\t"
-                          f"==>\n\t\t"
-                          f"{target_directory}")
+                    print(f"Merging {media_type} ({len(self.media_file_directories)}/{self.total_media_files})\n\t\t"
+                          f"{str(os.path.basename(self.media_file_directories[media_directory_index]))[truncate_amount:file_length]} "
+                          f"==> {target_directory}",
+                          end='\r')
                     for file_name in os.listdir(self.media_file_directories[media_directory_index]):
                         # construct full file path
                         source = os.path.normpath(
@@ -506,13 +506,13 @@ class MediaManager:
                     try:
                         os.rmdir(f"{self.media_file_directories[media_directory_index]}")
                     except OSError:
-                        print(f"\t\tSkipping removal of "
+                        self.print(f"\t\tSkipping removal of "
                               f"{self.media_file_directories[media_directory_index]}...")
                 else:
-                    print(f"\tMoving {media_type}({media_directory_index + 1}/{len(self.media_file_directories)})\n\t\t"
-                          f"{self.media_file_directories[media_directory_index][truncate_amount:file_length]}\n\t\t"
-                          f"==>\n\t\t"
-                          f"{target_directory}")
+                    print(f"Moving {media_type} ({len(self.media_file_directories)}/{self.total_media_files})\n\t\t"
+                          f"{str(os.path.basename(self.media_file_directories[media_directory_index]))[truncate_amount:file_length]} "
+                          f"==> {target_directory}",
+                          end='\r')
                     try:
                         shutil.move(self.media_file_directories[media_directory_index], target_directory)
                     except Exception as e:
