@@ -36,7 +36,7 @@ class MediaManager:
             f"ARROW.": f"",
             f"REMASTERED.": f"",
             f"REMASTER.": f"",
-            f"REMASTED.": f"",            
+            f"REMASTED.": f"",
             f"RESTORED.": f"",
             f"UNCUT.": f"",
             f"UNRATED.": f"",
@@ -67,7 +67,7 @@ class MediaManager:
             f"ARROW.": f"",
             f"REMASTERED.": f"",
             f"REMASTER.": f"",
-            f"REMASTED.": f"",      
+            f"REMASTED.": f"",
             f"RESTORED.": f"",
             f"UNCUT.": f"",
             f"UNRATED.": f"",
@@ -122,9 +122,12 @@ class MediaManager:
     def get_media_directory_list(self):
         return self.media_file_directories
 
-    def print(self, string):
+    def print(self, string, end="\n"):
         if not self.quiet:
-            print(string)
+            end = "\n"
+            print(string, end=end)
+        else:
+            print(string, end=end)
 
     # Detect if series or a movie
     def media_detection(self):
@@ -152,8 +155,8 @@ class MediaManager:
             self.folder_name = self.new_file_name
         # Check if media file does not have it's own folder, and create it if it does not
         self.print(f"\tVerifying Media Parent Directory:\n\t\t"
-              f"Current Directory: {os.path.normpath(os.path.join(self.directory, ''))}\n\t\t"
-              f"Parent Directory: {os.path.normpath(os.path.join(self.media_directory, self.folder_name, ''))}")
+                   f"Current Directory: {os.path.normpath(os.path.join(self.directory, ''))}\n\t\t"
+                   f"Parent Directory: {os.path.normpath(os.path.join(self.media_directory, self.folder_name, ''))}")
         if os.path.normpath(os.path.join(self.directory, '')) == os.path.normpath(
                 os.path.join(self.media_directory, '')):
             # If parent folder does not exist, create it
@@ -204,11 +207,12 @@ class MediaManager:
                 os.remove(file)
         self.media_files.sort()
         if not self.quiet:
-            self.print(f"Completed({len(self.completed_media_files)}): {self.completed_media_files}\nDetected({len(self.media_files)}): {self.media_files}")
+            self.print(
+                f"Completed({len(self.completed_media_files)}): {self.completed_media_files}\nDetected({len(self.media_files)}): {self.media_files}")
         for i in self.completed_media_files:
-            #print(f"\t\tVerifying completed: {i}")
+            # print(f"\t\tVerifying completed: {i}")
             if i in self.media_files:
-                #print(f"\t\tRemoving completed: {i}")
+                # print(f"\t\tRemoving completed: {i}")
                 self.media_files.remove(i)
         if total_media:
             self.total_media_files = len(self.media_files)
@@ -270,19 +274,19 @@ class MediaManager:
                             map_metadata=0,
                             map=0, vcodec='copy', acodec='copy',
                             **{'metadata:g:0': f"title={self.new_file_name}",
-                            'metadata:g:1': f"comment={self.new_file_name}"}) \
+                               'metadata:g:1': f"comment={self.new_file_name}"}) \
                     .overwrite_output() \
                     .run(quiet=self.quiet)
             except Exception as e:
                 try:
                     self.print(f"\t\tTrying to remap using alternative method...\n\t\tError: {e}")
                     ffmpeg.input(self.new_media_file_path) \
-                    .output(self.temporary_media_file_path,
-                            map_metadata=0, vcodec='copy', acodec='copy',
-                            **{'metadata:g:0': f"title={self.new_file_name}",
-                            'metadata:g:1': f"comment={self.new_file_name}"}) \
-                    .overwrite_output() \
-                    .run(quiet=self.quiet)
+                        .output(self.temporary_media_file_path,
+                                map_metadata=0, vcodec='copy', acodec='copy',
+                                **{'metadata:g:0': f"title={self.new_file_name}",
+                                   'metadata:g:1': f"comment={self.new_file_name}"}) \
+                        .overwrite_output() \
+                        .run(quiet=self.quiet)
                 except Exception as e:
                     self.print(f"\t\tError trying to remap using alternative method...\n\t\tError: {e}")
             os.remove(self.new_media_file_path)
@@ -361,8 +365,9 @@ class MediaManager:
         # Check if media folder name is the same as what is proposed
         if os.path.normpath(os.path.join(self.directory, '')) != os.path.normpath(
                 os.path.join(self.parent_directory, self.folder_name, '')):
-            self.print(f"\tRenaming directory: \n\t\t{os.path.normpath(os.path.join(self.directory, ''))} \n\t\t==>\n\t\t"
-                  f"{os.path.normpath(os.path.join(self.parent_directory, self.folder_name, ''))}")
+            self.print(
+                f"\tRenaming directory: \n\t\t{os.path.normpath(os.path.join(self.directory, ''))} \n\t\t==>\n\t\t"
+                f"{os.path.normpath(os.path.join(self.parent_directory, self.folder_name, ''))}")
             if os.path.isdir(os.path.normpath(os.path.join(self.parent_directory, self.folder_name))):
                 for file_name in os.listdir(self.directory):
                     # construct full file path
@@ -407,8 +412,11 @@ class MediaManager:
             truncate_amount = 0
             if file_length > self.max_file_length:
                 truncate_amount = abs(self.max_file_length - file_length)
-            print(f"Processing ({self.total_media_files - len(self.media_files) + 1}/{self.total_media_files}): "
-                  f"{str(os.path.basename(self.media_files[self.media_file_index]))[truncate_amount:file_length]}", end='\r')
+            processing_message = f"Processing ({(self.total_media_files - len(self.media_files)) + 1}/" \
+                                 f"{self.total_media_files}):  " \
+                                 f"{str(os.path.basename(self.media_files[self.media_file_index]))[truncate_amount:file_length]}"
+            processing_message = processing_message.ljust(self.terminal_width)
+            self.print(processing_message, end='\r')
             self.directory = os.path.normpath(os.path.dirname(self.media_files[self.media_file_index]))
             if not self.directory.endswith(os.path.sep):
                 self.directory += os.path.sep
@@ -459,13 +467,14 @@ class MediaManager:
                             os.path.basename(self.media_file_directories[media_directory_index])
                         )
                 ):
-                    media_directory = str(os.path.basename(self.media_file_directories[media_directory_index]))[truncate_amount:file_length]
+                    media_directory = str(os.path.basename(self.media_file_directories[media_directory_index]))[
+                                      truncate_amount:file_length]
                     merging_message = f"Merging {media_type} " \
                                       f"({len(self.media_file_directories)}/{self.total_media_files}) " \
                                       f"{media_directory} " \
                                       f"==> {target_directory}"
                     merging_message = merging_message.ljust(self.terminal_width)
-                    print(merging_message, end='\r')
+                    self.print(merging_message, end='\r')
                     for file_name in os.listdir(self.media_file_directories[media_directory_index]):
                         # construct full file path
                         source = os.path.normpath(
@@ -475,13 +484,13 @@ class MediaManager:
                         # move only files
                         if os.path.isfile(source):
                             if os.path.isfile(destination):
-                                print(f"\t\tFile already exists {destination}, skipping...")
+                                self.print(f"\t\tFile already exists {destination}, skipping...")
                             else:
                                 try:
                                     shutil.move(source, destination)
                                 except Exception as e:
-                                    print(f"\t\tUnable to move to target directory: {target_directory}]\n\t\t"
-                                          f"Error: {e}")
+                                    self.print(f"\t\tUnable to move to target directory: {target_directory}]\n\t\t"
+                                               f"Error: {e}")
                     if os.path.isdir(
                             os.path.normpath(
                                 os.path.join(
@@ -508,26 +517,27 @@ class MediaManager:
                                     self.media_file_directories[media_directory_index],
                                     "Subs"
                                 )
-                            ), 
+                            ),
                             ignore_errors=True
                         )
                     try:
                         os.rmdir(f"{self.media_file_directories[media_directory_index]}")
                     except OSError:
                         self.print(f"\t\tSkipping removal of "
-                              f"{self.media_file_directories[media_directory_index]}...")
+                                   f"{self.media_file_directories[media_directory_index]}...")
                 else:
-                    media_directory = str(os.path.basename(self.media_file_directories[media_directory_index]))[truncate_amount:file_length]
+                    media_directory = str(os.path.basename(self.media_file_directories[media_directory_index]))[
+                                      truncate_amount:file_length]
                     moving_message = f"Moving {media_type} " \
                                      f"({len(self.media_file_directories)}/{self.total_media_files}) " \
                                      f"{media_directory} " \
                                      f"==> {target_directory}"
                     moving_message = moving_message.ljust(self.terminal_width)
-                    print(moving_message, end='\r')
+                    self.print(moving_message, end='\r')
                     try:
                         shutil.move(self.media_file_directories[media_directory_index], target_directory)
                     except Exception as e:
-                        print(f"\nUnable to move to target directory: {target_directory}]\n\t\tError: {e}")
+                        self.print(f"\nUnable to move to target directory: {target_directory}]\n\t\tError: {e}")
 
 
 def media_manager(argv):
