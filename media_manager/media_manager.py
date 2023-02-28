@@ -348,7 +348,7 @@ class MediaManager:
             self.completed_media_files.append(self.media_files[self.media_file_index])
             self.media_file_index += 1
         else:
-            self.completed_media_files.append(self.media_files[self.media_file_index])
+            #self.completed_media_files.append(self.media_files[self.media_file_index])
             self.media_file_index += 1
         self.print(f"\tMetadata Updated: {os.path.basename(self.new_media_file_path)}")
 
