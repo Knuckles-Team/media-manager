@@ -412,7 +412,7 @@ class MediaManager:
             truncate_amount = 0
             if file_length > self.max_file_length:
                 truncate_amount = abs(self.max_file_length - file_length)
-            processing_message = f"Processing [{self.media_file_index}]({self.media_file_index + 1}/" \
+            processing_message = f"Processing ({self.media_file_index + 1}/" \
                                  f"{self.total_media_files}):  " \
                                  f"{str(os.path.basename(self.media_files[self.media_file_index]))[truncate_amount:file_length]}"
             processing_message = processing_message.ljust(self.terminal_width)
@@ -470,7 +470,7 @@ class MediaManager:
                     media_directory = str(os.path.basename(self.media_file_directories[media_directory_index]))[
                                       truncate_amount:file_length]
                     merging_message = f"Merging {media_type} " \
-                                      f"({len(self.media_file_directories)}/{self.total_media_files}) " \
+                                      f"({media_directory_index + 1}/{self.total_media_files}) " \
                                       f"{media_directory} " \
                                       f"==> {target_directory}"
                     merging_message = merging_message.ljust(self.terminal_width)
