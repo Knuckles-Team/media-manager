@@ -219,7 +219,6 @@ class MediaManager:
             self.total_media_files = len(self.media_files)
         self.print(f"\tMedia Found! ({len(self.media_file_directories)} files)")
 
-    # Rename file
     def rename_file(self):
         self.print("\tRenaming file...")
         old_file_path = os.path.normpath(os.path.join(self.directory,
