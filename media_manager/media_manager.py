@@ -204,7 +204,7 @@ class MediaManager:
                 os.remove(file)
         self.media_files.sort()
         if not self.quiet:
-            self.print(f"Completed: {self.completed_media_files}\nDetected: {self.media_files}")
+            self.print(f"Completed({len(self.completed_media_files)}): {self.completed_media_files}\nDetected({len(self.media_files)}): {self.media_files}")
         for i in self.completed_media_files:
             #print(f"\t\tVerifying completed: {i}")
             if i in self.media_files:
@@ -262,6 +262,7 @@ class MediaManager:
         except Exception as e:
             current_title_metadata = ""
             self.print(f"Error reading metadata: {e}")
+        current_index = self.media_file_index
         if current_title_metadata != self.new_file_name and self.subtitle is False:
             try:
                 ffmpeg.input(self.new_media_file_path) \
@@ -286,7 +287,6 @@ class MediaManager:
                     self.print(f"\t\tError trying to remap using alternative method...\n\t\tError: {e}")
             os.remove(self.new_media_file_path)
             os.rename(self.temporary_media_file_path, self.new_media_file_path)
-            self.completed_media_files.append(self.media_files[self.media_file_index])
             self.media_file_index = 0
         elif current_title_metadata != self.new_file_name and self.subtitle is True:
             subtitle_file = "English.srt"
@@ -345,13 +345,10 @@ class MediaManager:
                     .run(quiet=self.quiet)
                 os.remove(self.new_media_file_path)
                 os.rename(self.temporary_media_file_path, self.new_media_file_path)
-            self.completed_media_files.append(self.media_files[self.media_file_index])
-            self.media_file_index += 1
-        elif current_title_metadata == self.new_file_name:
-            self.completed_media_files.append(self.media_files[self.media_file_index])
-            self.media_file_index += 1
+            self.media_file_index = 0
         else:
             self.media_file_index += 1
+        self.completed_media_files.append(self.media_files[current_index])
         self.print(f"\tMetadata Updated: {os.path.basename(self.new_media_file_path)}")
 
     # Rename directory
