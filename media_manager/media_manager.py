@@ -8,14 +8,14 @@ import getopt
 import ffmpeg
 import shutil
 import glob
-import musicbrainzngs
-from mutagen.easyid3 import EasyID3
-musicbrainzngs.set_useragent("python-musicbrainz", "0.7.3")
+import music_tag
+import asyncio
+from shazamio import Shazam
+from urllib.request import urlopen
 
 class MediaManager:
 
     def __init__(self):
-
         self.media_files = []
         self.completed_media_files = []
         self.media_file_directories = []
@@ -101,13 +101,16 @@ class MediaManager:
         self.media_type = "media"
         self.subtitle = False
         self.media_file_index = 0
-        self.audio_file = None
+        self.audio_tags = None
         try:
             columns, rows = os.get_terminal_size(0)
         except Exception as e:
             columns = 50
         self.terminal_width = columns
         self.max_file_length = self.terminal_width - 50
+        self.shazam = Shazam()
+        self.supported_audio_types = ['mp3', 'm4a', 'flac', 'aac', 'aiff', 'dsf', 'ogg', 'opus', 'wav', 'wv']
+        self.supported_video_types = ['mp4', 'mkv']
 
     def set_verbose(self, quiet=True):
         self.quiet = quiet
@@ -137,41 +140,28 @@ class MediaManager:
     def media_detection(self):
         self.parent_directory = os.path.dirname(os.path.normpath(self.directory))
         self.folder_name = os.path.basename(os.path.normpath(self.directory))
-        if bool(re.search("S[0-9][0-9]*E[0-9][0-9]*", self.file_name)) \
-                or bool(re.search("s[0-9][0-9]*e[0-9][0-9]*", self.file_name)):
-            self.filters = self.series_filters
-            self.media_type = "series"
-            self.print(f"\tDetected media type: Series")
-
-        # SUPPORTED FILE TYPES:
-        # Advanced Audio Coding (aac)
-        # Apple Lossless Audio Codec (alac)
-        # Audio Interchange File Format (aif / aifc / aiff)
-        # Direct Stream Digital Audio (dsf)
-        # Free Lossless Audio Codec (flac)
-        # Matroska (mka / mkv)
-        # Monkey's Audio (ape)
-        # Mpeg Layer 3 (mp3)
-        # MPEG-4 (mp4 / m4a / m4b / m4v / iTunes)
-        # Musepack (mpc)
-        # Ogg Vorbis (ogg)
-        # IETF Opus (opus)
-        # OptimFROG (ofr / ofs)
-        # Speex (spx)
-        # Tom's Audio Kompressor (tak)
-        # True Audio (tta)
-        # Windows Media Audio (wma)
-        # WavPack (wv)
-        # WAV (wav)
-        # WebM (webm)
-        elif "mp3" in self.file_name or "m4a" in self.file_name:
+        if self.file_extension in self.supported_audio_types:
             self.media_type = "music"
-            self.audio_file = EasyID3(self.media_file)
+            self.audio_tags = None
+            try:
+                self.audio_tags = music_tag.load_file(self.media_file)
+            except Exception as e:
+                print(f"Unable to open file: {e}")
+            print("Opened Audio")
+            if not self.audio_tags:
+                print("Audio file was not loaded")
+                sys.exit(2)
             self.print(f"\tDetected media type: Music")
-        else:
-            self.filters = self.movie_filters
-            self.media_type = "media"
-            self.print(f"\tDetected media type: Media")
+        elif self.file_extension in self.supported_video_types:
+            if bool(re.search("S[0-9][0-9]*E[0-9][0-9]*", self.file_name)) \
+                    or bool(re.search("s[0-9][0-9]*e[0-9][0-9]*", self.file_name)):
+                self.filters = self.series_filters
+                self.media_type = "series"
+                self.print(f"\tDetected media type: Series")
+            else:
+                self.filters = self.movie_filters
+                self.media_type = "media"
+                self.print(f"\tDetected media type: Media")
 
     # Clean filename
     def clean_file_name(self):
@@ -184,7 +174,7 @@ class MediaManager:
         elif self.media_type == "media":
             self.folder_name = self.new_file_name
         elif self.media_type == "music":
-            self.folder_name = os.path.join(self.audio_file['artist'], self.audio_file['album'])# ID3 TAG
+            self.folder_name = self.audio_tags['artist']
 
         # Check if media file does not have it's own folder, and create it if it does not
         self.print(f"\tVerifying Media Parent Directory:\n\t\t"
@@ -232,7 +222,8 @@ class MediaManager:
         files = files + glob.glob(f"{self.media_directory}/*/*", recursive=True)
         files = files + glob.glob(f"{self.media_directory}/*/*/*", recursive=True)
         for file in files:
-            if file.endswith(".mp4") or file.endswith(".mkv") or file.endswith(".mp3") or file.endswith(".m4a"):
+            file_name, file_extension = os.path.splitext(file)
+            if file_extension in self.supported_video_types or file_extension in self.supported_audio_types:
                 self.media_files.append(os.path.join(file))
                 self.media_file_directories.append(os.path.dirname(file))
                 self.media_file_directories = [*set(self.media_file_directories)]
@@ -288,23 +279,47 @@ class MediaManager:
                     os.rename(subtitle_directories[subtitle_directory_index],
                               os.path.normpath(os.path.join(subtitle_parent_directory, new_folder_name)))
 
-
     def set_media_metadata(self):
         if self.media_type == "series" or self.media_type == "media":
             self.set_video_metadata()
         elif self.media_type == "music":
-            self.set_music_metadata()
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(self.set_audio_metadata())
 
-    def find_music_metadata(self):
-        # result = musicbrainzngs.search_artists(artist="xx", type="group",
-        #                                        country="GB")
-        # for artist in result['artist-list']:
-        #     print(u"{id}: {name}".format(id=artist['id'], name=artist["name"]))
-        #
-        # musicbrainzngs.search_release_groups("the clash london calling")
-    def set_music_metadata(self):
-        self.find_music_metadata()
-        print("Setting metadata")
+    async def set_audio_metadata(self):
+        # First check if artist - title format matches and if album art exists
+        if self.audio_tags['artwork'] \
+                and self.audio_tags['artist'] != self.media_file.split('-')[0] \
+                and self.audio_tags['tracktitle'] != self.media_file.split('-')[1]:
+            print("File metadata is already set, moving on...")
+            return
+
+        print(f"⚡ Shazam ⚡ {self.media_file}...")
+        song = await self.shazam.recognize_song(self.media_file)
+        print("Reading Metadata...")
+        self.audio_tags['tracktitle'] = song['track']['title']
+        self.audio_tags['albumartist'] = song['track']['subtitle']
+        self.audio_tags['artist'] = song['track']['subtitle']
+        self.audio_tags['album'] = song['track']['sections'][0]['metadata'][0]['text']
+        self.audio_tags['year'] = song['track']['sections'][0]['metadata'][2]['text']
+        self.audio_tags['lyrics'] = song['track']['sections'][1]['text']
+        self.audio_tags['comment'] = song['track']['sections'][1]['text']
+        self.audio_tags['genre'] = song['track']['genres']['primary']
+        self.audio_tags['composer'] = song['track']['sections'][0]['metadata'][1]['text']
+        self.new_file_name = f"{song['track']['subtitle']} - {song['track']['title']}"
+        album_art = urlopen(song['track']['images']['coverart'])
+        self.audio_tags['artwork'] = album_art.read()
+        album_art.close()
+        self.audio_tags['artwork'].first.thumbnail([64, 64])
+        self.audio_tags.save()
+        print(f"Track: {self.audio_tags['title']}\n"
+              f"Artist:{self.audio_tags['artist']}\n"              
+              f"Album: {self.audio_tags['album']}\n"
+              f"Year: {self.audio_tags['year']}\n"
+              f"Comments: {self.audio_tags['comment']}\n"
+              f"Genre: {self.audio_tags['genre']}\n"
+              f"Cover Art URL: {song['track']['images']['coverart']}\n"
+              f"Metadata Saved Successfully!")
 
     # Check if media metadata title is the same as what is proposed
     def set_video_metadata(self):
@@ -476,11 +491,17 @@ class MediaManager:
             self.file_name, self.file_extension = os.path.splitext(self.media_file)
             self.new_file_name = self.file_name
             self.media_detection()
-            self.clean_file_name()
+            if self.file_extension in self.supported_video_types:
+                self.clean_file_name()
             self.verify_parent_directory()
-            self.rename_file()
-            self.clean_subtitle_directory(subtitle_directory=f"{self.parent_directory}/{self.folder_name}/Subs")
-            self.set_media_metadata()
+            # For Videos, rename the file before setting the metadata, for Audio, set the metadata first, then rename the file
+            if self.file_extension in self.supported_video_types:
+                self.rename_file()
+                self.clean_subtitle_directory(subtitle_directory=f"{self.parent_directory}/{self.folder_name}/Subs")
+                self.set_media_metadata()
+            elif self.file_extension in self.supported_audio_types:
+                self.set_media_metadata()
+                self.rename_file()
             self.rename_directory()
         self.reset_variables()
 
