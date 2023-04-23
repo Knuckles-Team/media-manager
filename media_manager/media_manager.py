@@ -8,11 +8,14 @@ import getopt
 import ffmpeg
 import shutil
 import glob
-
+import musicbrainzngs
+from mutagen.easyid3 import EasyID3
+musicbrainzngs.set_useragent("python-musicbrainz", "0.7.3")
 
 class MediaManager:
 
     def __init__(self):
+
         self.media_files = []
         self.completed_media_files = []
         self.media_file_directories = []
@@ -95,9 +98,10 @@ class MediaManager:
             r" - -": " -",
         }
         self.filters = self.movie_filters
-        self.series = False
+        self.media_type = "media"
         self.subtitle = False
         self.media_file_index = 0
+        self.audio_file = None
         try:
             columns, rows = os.get_terminal_size(0)
         except Exception as e:
@@ -136,11 +140,37 @@ class MediaManager:
         if bool(re.search("S[0-9][0-9]*E[0-9][0-9]*", self.file_name)) \
                 or bool(re.search("s[0-9][0-9]*e[0-9][0-9]*", self.file_name)):
             self.filters = self.series_filters
-            self.series = True
+            self.media_type = "series"
             self.print(f"\tDetected media type: Series")
+
+        # SUPPORTED FILE TYPES:
+        # Advanced Audio Coding (aac)
+        # Apple Lossless Audio Codec (alac)
+        # Audio Interchange File Format (aif / aifc / aiff)
+        # Direct Stream Digital Audio (dsf)
+        # Free Lossless Audio Codec (flac)
+        # Matroska (mka / mkv)
+        # Monkey's Audio (ape)
+        # Mpeg Layer 3 (mp3)
+        # MPEG-4 (mp4 / m4a / m4b / m4v / iTunes)
+        # Musepack (mpc)
+        # Ogg Vorbis (ogg)
+        # IETF Opus (opus)
+        # OptimFROG (ofr / ofs)
+        # Speex (spx)
+        # Tom's Audio Kompressor (tak)
+        # True Audio (tta)
+        # Windows Media Audio (wma)
+        # WavPack (wv)
+        # WAV (wav)
+        # WebM (webm)
+        elif "mp3" in self.file_name or "m4a" in self.file_name:
+            self.media_type = "music"
+            self.audio_file = EasyID3(self.media_file)
+            self.print(f"\tDetected media type: Music")
         else:
             self.filters = self.movie_filters
-            self.series = False
+            self.media_type = "media"
             self.print(f"\tDetected media type: Media")
 
     # Clean filename
@@ -149,10 +179,13 @@ class MediaManager:
             self.new_file_name = re.sub(str(key), str(self.filters[key]), self.new_file_name)
 
     def verify_parent_directory(self):
-        if self.series:
+        if self.media_type == "series":
             self.folder_name = re.sub(" - S[0-9]+E[0-9]+", "", self.new_file_name)
-        else:
+        elif self.media_type == "media":
             self.folder_name = self.new_file_name
+        elif self.media_type == "music":
+            self.folder_name = os.path.join(self.audio_file['artist'], self.audio_file['album'])# ID3 TAG
+
         # Check if media file does not have it's own folder, and create it if it does not
         self.print(f"\tVerifying Media Parent Directory:\n\t\t"
                    f"Current Directory: {os.path.normpath(os.path.join(self.directory, ''))}\n\t\t"
@@ -199,11 +232,11 @@ class MediaManager:
         files = files + glob.glob(f"{self.media_directory}/*/*", recursive=True)
         files = files + glob.glob(f"{self.media_directory}/*/*/*", recursive=True)
         for file in files:
-            if file.endswith(".mp4") or file.endswith(".mkv"):
+            if file.endswith(".mp4") or file.endswith(".mkv") or file.endswith(".mp3") or file.endswith(".m4a"):
                 self.media_files.append(os.path.join(file))
                 self.media_file_directories.append(os.path.dirname(file))
                 self.media_file_directories = [*set(self.media_file_directories)]
-            elif file.endswith(".nfo") or file.endswith(".txt") or file.endswith(".exe"):
+            elif file.endswith(".nfo") or file.endswith(".exe"):
                 os.remove(file)
         self.media_files.sort()
         for i in self.completed_media_files:
@@ -238,7 +271,7 @@ class MediaManager:
             self.file_name = self.new_file_name
             self.media_files[self.media_file_index] = self.new_media_file_path
             self.media_file_index = 0
-            self.print(f"\tFile Renamed: \n\t\t{old_file_path} \n\t\t==> \n\t\t{self.new_media_file_path}")
+            self.print(f"\tFile Renamed: \n\t\t{old_file_path} \n\t\t➜ \n\t\t{self.new_media_file_path}")
 
     # Clean Subtitle directories
     def clean_subtitle_directory(self, subtitle_directory: str):
@@ -255,8 +288,26 @@ class MediaManager:
                     os.rename(subtitle_directories[subtitle_directory_index],
                               os.path.normpath(os.path.join(subtitle_parent_directory, new_folder_name)))
 
-    # Check if media metadata title is the same as what is proposed
+
     def set_media_metadata(self):
+        if self.media_type == "series" or self.media_type == "media":
+            self.set_video_metadata()
+        elif self.media_type == "music":
+            self.set_music_metadata()
+
+    def find_music_metadata(self):
+        # result = musicbrainzngs.search_artists(artist="xx", type="group",
+        #                                        country="GB")
+        # for artist in result['artist-list']:
+        #     print(u"{id}: {name}".format(id=artist['id'], name=artist["name"]))
+        #
+        # musicbrainzngs.search_release_groups("the clash london calling")
+    def set_music_metadata(self):
+        self.find_music_metadata()
+        print("Setting metadata")
+
+    # Check if media metadata title is the same as what is proposed
+    def set_video_metadata(self):
         self.print(f"\tUpdating metadata for {os.path.basename(self.new_media_file_path)}...")
         try:
             if "title" in ffmpeg.probe(self.new_media_file_path)['format']['tags']:
@@ -295,7 +346,7 @@ class MediaManager:
         elif current_title_metadata != self.new_file_name and self.subtitle is True:
             subtitle_file = "English.srt"
             subtitle_files = []
-            if self.series and os.path.isdir(f"{self.parent_directory}/{self.folder_name}/Subs"):
+            if self.media_type == "series" and os.path.isdir(f"{self.parent_directory}/{self.folder_name}/Subs"):
                 matching_video = 0
                 subtitle_directories = glob.glob(f"{self.parent_directory}/{self.folder_name}/Subs/*/", recursive=True)
                 subtitle_directories.sort()
@@ -357,7 +408,7 @@ class MediaManager:
 
     # Rename directory
     def rename_directory(self):
-        if self.series:
+        if self.media_type == "series":
             self.folder_name = re.sub(" - S[0-9]+E[0-9]+", "", self.new_file_name)
         else:
             self.folder_name = self.new_file_name
@@ -366,7 +417,7 @@ class MediaManager:
         if os.path.normpath(os.path.join(self.directory, '')) != os.path.normpath(
                 os.path.join(self.parent_directory, self.folder_name, '')):
             self.print(
-                f"\tRenaming directory: \n\t\t{os.path.normpath(os.path.join(self.directory, ''))} \n\t\t==>\n\t\t"
+                f"\tRenaming directory: \n\t\t{os.path.normpath(os.path.join(self.directory, ''))} \n\t\t➜\n\t\t"
                 f"{os.path.normpath(os.path.join(self.parent_directory, self.folder_name, ''))}")
             if os.path.isdir(os.path.normpath(os.path.join(self.parent_directory, self.folder_name))):
                 for file_name in os.listdir(self.directory):
@@ -390,7 +441,6 @@ class MediaManager:
             self.find_media()
             self.media_file_index = 0
         else:
-            #self.find_media()
             self.print(f"\tRenaming directory not needed: {os.path.normpath(os.path.join(self.directory, ''))}")
 
     # Cleanup Variables
@@ -412,9 +462,11 @@ class MediaManager:
             truncate_amount = 0
             if file_length > self.max_file_length:
                 truncate_amount = abs(self.max_file_length - file_length)
+            pretty_print_filename = str(os.path.basename(self.media_files[self.media_file_index]))
+            pretty_print_filename = pretty_print_filename[truncate_amount:file_length]
             processing_message = f"Processing ({self.media_file_index + 1}/" \
-                                 f"{self.total_media_files}):  " \
-                                 f"{str(os.path.basename(self.media_files[self.media_file_index]))[truncate_amount:file_length]}"
+                                 f"{self.total_media_files}): " \
+                                 f"{pretty_print_filename}"
             processing_message = processing_message.ljust(self.terminal_width)
             self.print(processing_message, end='\r')
             self.directory = os.path.normpath(os.path.dirname(self.media_files[self.media_file_index]))
@@ -456,6 +508,9 @@ class MediaManager:
                         and re.search("s[0-9][0-9]*e[0-9][0-9]*", file) is None:
                     move = True
                     break
+                if media_type == "music" and (bool(re.search(".mp3", file)) or bool(re.search(".m4a", file))):
+                    move = True
+                    break
             file_length = len(str(os.path.basename(self.media_file_directories[media_directory_index])))
             truncate_amount = 0
             if file_length > self.max_file_length:
@@ -472,7 +527,7 @@ class MediaManager:
                     merging_message = f"Merging {media_type} " \
                                       f"({media_directory_index + 1}/{self.total_media_files}) " \
                                       f"{media_directory} " \
-                                      f"==> {target_directory}"
+                                      f"➜ {target_directory}"
                     merging_message = merging_message.ljust(self.terminal_width)
                     self.print(merging_message, end='\r')
                     for file_name in os.listdir(self.media_file_directories[media_directory_index]):
@@ -531,7 +586,7 @@ class MediaManager:
                     moving_message = f"Moving {media_type} " \
                                      f"({len(self.media_file_directories)}/{self.total_media_files}) " \
                                      f"{media_directory} " \
-                                     f"==> {target_directory}"
+                                     f"➜ {target_directory}"
                     moving_message = moving_message.ljust(self.terminal_width)
                     self.print(moving_message, end='\r')
                     try:
@@ -543,13 +598,15 @@ class MediaManager:
 def media_manager(argv):
     media_manager_instance = MediaManager()
     media_flag = False
+    music_flag = False
     tv_flag = False
     subtitle_flag = False
     tv_directory = os.path.join(os.path.expanduser('~'), "Downloads")
     media_directory = os.path.join(os.path.expanduser('~'), "Downloads")
+    music_directory = os.path.join(os.path.expanduser('~'), "Downloads")
     source_directory = os.path.join(os.path.expanduser('~'), "Downloads")
     try:
-        opts, args = getopt.getopt(argv, "hd:m:t:sv",
+        opts, args = getopt.getopt(argv, "hv",
                                    ["help", "media-directory=", "tv-directory=", "directory=", "subtitle", "verbose"])
     except getopt.GetoptError:
         usage()
@@ -558,15 +615,18 @@ def media_manager(argv):
         if opt in ("-h", "--help"):
             usage()
             sys.exit()
-        elif opt in ("-d", "--directory"):
+        elif opt in ("--directory"):
             source_directory = arg
-        elif opt in ("-m", "--media-directory"):
+        elif opt in ("--music-directory"):
+            music_flag = True
+            music_directory = arg
+        elif opt in ("--media-directory"):
             media_flag = True
             media_directory = arg
-        elif opt in ("-t", "--tv-directory"):
+        elif opt in ("--tv-directory"):
             tv_flag = True
             tv_directory = arg
-        elif opt in ("-s", "--subtitle"):
+        elif opt in ("--subtitle"):
             subtitle_flag = True
         elif opt in ("-v", "--verbose"):
             media_manager_instance.set_verbose(quiet=False)
@@ -580,6 +640,8 @@ def media_manager(argv):
         media_manager_instance.move_media(target_directory=tv_directory, media_type="series")
     if media_flag:
         media_manager_instance.move_media(target_directory=media_directory, media_type="media")
+    if music_flag:
+        media_manager_instance.move_media(target_directory=music_directory, media_type="music")
     print("Complete!")
 
 
