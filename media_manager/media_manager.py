@@ -13,6 +13,7 @@ import asyncio
 from shazamio import Shazam
 from urllib.request import urlopen
 
+
 class MediaManager:
 
     def __init__(self):
@@ -140,19 +141,22 @@ class MediaManager:
     def media_detection(self):
         self.parent_directory = os.path.dirname(os.path.normpath(self.directory))
         self.folder_name = os.path.basename(os.path.normpath(self.directory))
-        if self.file_extension in self.supported_audio_types:
+        if self.file_extension[1:] in self.supported_audio_types:
             self.media_type = "music"
             self.audio_tags = None
             try:
-                self.audio_tags = music_tag.load_file(self.media_file)
+                self.audio_tags = music_tag.load_file(os.path.normpath(os.path.join(self.directory, self.media_file)))
             except Exception as e:
-                print(f"Unable to open file: {e}")
-            print("Opened Audio")
+                print(f"Unable to open file: {e}...\nTrying new File Path...")
+                try:
+                    self.audio_tags = music_tag.load_file(self.new_media_file_path)
+                except Exception as e2:
+                    print(f"Unable to open new file path: {e2}")
             if not self.audio_tags:
                 print("Audio file was not loaded")
                 sys.exit(2)
             self.print(f"\tDetected media type: Music")
-        elif self.file_extension in self.supported_video_types:
+        elif self.file_extension[1:] in self.supported_video_types:
             if bool(re.search("S[0-9][0-9]*E[0-9][0-9]*", self.file_name)) \
                     or bool(re.search("s[0-9][0-9]*e[0-9][0-9]*", self.file_name)):
                 self.filters = self.series_filters
@@ -174,7 +178,8 @@ class MediaManager:
         elif self.media_type == "media":
             self.folder_name = self.new_file_name
         elif self.media_type == "music":
-            self.folder_name = self.audio_tags['artist']
+            if self.audio_tags['artist'].value:
+                self.folder_name = self.audio_tags['artist'].value
 
         # Check if media file does not have it's own folder, and create it if it does not
         self.print(f"\tVerifying Media Parent Directory:\n\t\t"
@@ -204,6 +209,12 @@ class MediaManager:
                     os.rmdir(f"{self.directory}")
                 self.print(f"\tMerging parent directories: {os.path.join(self.parent_directory, '')}")
             self.directory = self.parent_directory
+            self.new_media_file_path = os.path.normpath(
+                                           os.path.join(
+                                               self.directory,
+                                               f"{self.new_file_name}{self.file_extension}"))
+            self.media_file = self.new_media_file_path
+            print(f"New Media Path: {self.new_media_file_path}")
             self.parent_directory = os.path.join(self.parent_directory, os.pardir)
         else:
             self.print(f"\tParent directory already exists: {self.directory}")
@@ -223,7 +234,7 @@ class MediaManager:
         files = files + glob.glob(f"{self.media_directory}/*/*/*", recursive=True)
         for file in files:
             file_name, file_extension = os.path.splitext(file)
-            if file_extension in self.supported_video_types or file_extension in self.supported_audio_types:
+            if file_extension[1:] in self.supported_video_types or file_extension[1:] in self.supported_audio_types:
                 self.media_files.append(os.path.join(file))
                 self.media_file_directories.append(os.path.dirname(file))
                 self.media_file_directories = [*set(self.media_file_directories)]
@@ -287,39 +298,58 @@ class MediaManager:
             loop.run_until_complete(self.set_audio_metadata())
 
     async def set_audio_metadata(self):
+        self.print(f"\tUpdating metadata for {os.path.basename(self.media_file)}...")
+        try:
+            print("\t", self.audio_tags['artwork'])
+            artwork_present = True
+        except KeyError:
+            artwork_present = False
         # First check if artist - title format matches and if album art exists
-        if self.audio_tags['artwork'] \
-                and self.audio_tags['artist'] != self.media_file.split('-')[0] \
-                and self.audio_tags['tracktitle'] != self.media_file.split('-')[1]:
+        if artwork_present \
+                and self.audio_tags['artist'].first == self.media_file.split('-')[0].strip() \
+                and f"{self.audio_tags['tracktitle'].first}{self.file_extension}" == self.media_file.split('-')[
+            1].strip():
             print("File metadata is already set, moving on...")
+            self.media_file_index += 1
             return
 
-        print(f"⚡ Shazam ⚡ {self.media_file}...")
-        song = await self.shazam.recognize_song(self.media_file)
-        print("Reading Metadata...")
+        print(f"\t⚡ Shazam ⚡ {self.media_file}...")
+        song = await self.shazam.recognize_song(os.path.normpath(os.path.join(self.directory, self.media_file)))
         self.audio_tags['tracktitle'] = song['track']['title']
         self.audio_tags['albumartist'] = song['track']['subtitle']
         self.audio_tags['artist'] = song['track']['subtitle']
         self.audio_tags['album'] = song['track']['sections'][0]['metadata'][0]['text']
         self.audio_tags['year'] = song['track']['sections'][0]['metadata'][2]['text']
-        self.audio_tags['lyrics'] = song['track']['sections'][1]['text']
-        self.audio_tags['comment'] = song['track']['sections'][1]['text']
-        self.audio_tags['genre'] = song['track']['genres']['primary']
-        self.audio_tags['composer'] = song['track']['sections'][0]['metadata'][1]['text']
+        try:
+            self.audio_tags['lyrics'] = song['track']['sections'][1]['text']
+            self.audio_tags['comment'] = song['track']['sections'][1]['text']
+        except KeyError:
+            print("No Lyrics found")
+        try:
+            self.audio_tags['genre'] = song['track']['genres']['primary']
+        except KeyError:
+            print("No Genre found")
+        try:
+            self.audio_tags['composer'] = song['track']['sections'][0]['metadata'][1]['text']
+        except KeyError:
+            print("No Composer found")
         self.new_file_name = f"{song['track']['subtitle']} - {song['track']['title']}"
+        self.folder_name = self.audio_tags['artist']
         album_art = urlopen(song['track']['images']['coverart'])
         self.audio_tags['artwork'] = album_art.read()
         album_art.close()
         self.audio_tags['artwork'].first.thumbnail([64, 64])
         self.audio_tags.save()
-        print(f"Track: {self.audio_tags['title']}\n"
-              f"Artist:{self.audio_tags['artist']}\n"              
-              f"Album: {self.audio_tags['album']}\n"
-              f"Year: {self.audio_tags['year']}\n"
-              f"Comments: {self.audio_tags['comment']}\n"
-              f"Genre: {self.audio_tags['genre']}\n"
-              f"Cover Art URL: {song['track']['images']['coverart']}\n"
-              f"Metadata Saved Successfully!")
+        self.completed_media_files.append(self.media_files[self.media_file_index])
+        print(f"\t\tTrack: {self.audio_tags['title']}\n"
+              f"\t\tArtist:{self.audio_tags['artist']}\n"
+              f"\t\tAlbum: {self.audio_tags['album']}\n"
+              f"\t\tYear: {self.audio_tags['year']}\n"
+              f"\t\tComments: {self.audio_tags['comment']}\n"
+              f"\t\tGenre: {self.audio_tags['genre']}\n"
+              f"\t\tCover Art URL: {song['track']['images']['coverart']}\n"
+              f"\tMetadata Saved Successfully!")
+        self.media_file_index = 0
 
     # Check if media metadata title is the same as what is proposed
     def set_video_metadata(self):
@@ -423,9 +453,11 @@ class MediaManager:
 
     # Rename directory
     def rename_directory(self):
-        if self.media_type == "series":
+        if self.media_type == "music":
+            self.folder_name = self.folder_name
+        elif self.media_type == "series":
             self.folder_name = re.sub(" - S[0-9]+E[0-9]+", "", self.new_file_name)
-        else:
+        elif self.media_type == "media":
             self.folder_name = self.new_file_name
         # self.parent_directory = os.path.dirname(os.path.normpath(self.directory))
         # Check if media folder name is the same as what is proposed
@@ -491,17 +523,18 @@ class MediaManager:
             self.file_name, self.file_extension = os.path.splitext(self.media_file)
             self.new_file_name = self.file_name
             self.media_detection()
-            if self.file_extension in self.supported_video_types:
+            if self.file_extension[1:] in self.supported_video_types:
                 self.clean_file_name()
-            self.verify_parent_directory()
             # For Videos, rename the file before setting the metadata, for Audio, set the metadata first, then rename the file
-            if self.file_extension in self.supported_video_types:
+            if self.file_extension[1:] in self.supported_video_types:
+                self.verify_parent_directory()
                 self.rename_file()
                 self.clean_subtitle_directory(subtitle_directory=f"{self.parent_directory}/{self.folder_name}/Subs")
                 self.set_media_metadata()
-            elif self.file_extension in self.supported_audio_types:
+            elif self.file_extension[1:] in self.supported_audio_types:
                 self.set_media_metadata()
                 self.rename_file()
+                self.verify_parent_directory()
             self.rename_directory()
         self.reset_variables()
 
@@ -627,9 +660,10 @@ def media_manager(argv):
     music_directory = os.path.join(os.path.expanduser('~'), "Downloads")
     source_directory = os.path.join(os.path.expanduser('~'), "Downloads")
     try:
-        opts, args = getopt.getopt(argv, "hv",
+        opts, args = getopt.getopt(argv, "hvd:",
                                    ["help", "media-directory=", "tv-directory=", "directory=", "subtitle", "verbose"])
-    except getopt.GetoptError:
+    except getopt.GetoptError as e:
+        print(f"Argument Error: {e}")
         usage()
         sys.exit(2)
     for opt, arg in opts:
