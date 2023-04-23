@@ -10,6 +10,7 @@ import shutil
 import glob
 import music_tag
 import asyncio
+import json
 from shazamio import Shazam
 from urllib.request import urlopen
 
@@ -147,7 +148,7 @@ class MediaManager:
             try:
                 self.audio_tags = music_tag.load_file(os.path.normpath(os.path.join(self.directory, self.media_file)))
             except Exception as e:
-                print(f"Unable to open file: {e}...\nTrying new File Path...")
+                print(f"Unable to open file {os.path.normpath(os.path.join(self.directory, self.media_file))}: \n{e}...\n\nTrying new File Path: {self.new_media_file_path}...")
                 try:
                     self.audio_tags = music_tag.load_file(self.new_media_file_path)
                 except Exception as e2:
@@ -315,6 +316,8 @@ class MediaManager:
 
         print(f"\t⚡ Shazam ⚡ {self.media_file}...")
         song = await self.shazam.recognize_song(os.path.normpath(os.path.join(self.directory, self.media_file)))
+        with open(f"{song['track']['subtitle']} - {song['track']['title']}.json", "w") as outfile:
+            outfile.write(json.dumps(song, indent=4))
         self.audio_tags['tracktitle'] = song['track']['title']
         self.audio_tags['albumartist'] = song['track']['subtitle']
         self.audio_tags['artist'] = song['track']['subtitle']
@@ -514,6 +517,9 @@ class MediaManager:
             processing_message = f"Processing ({self.media_file_index + 1}/" \
                                  f"{self.total_media_files}): " \
                                  f"{pretty_print_filename}"
+            print(f"Processing ({self.media_file_index + 1}/"
+                  f"{self.total_media_files}): "
+                  f"{pretty_print_filename}")
             processing_message = processing_message.ljust(self.terminal_width)
             self.print(processing_message, end='\r')
             self.directory = os.path.normpath(os.path.dirname(self.media_files[self.media_file_index]))
@@ -532,9 +538,9 @@ class MediaManager:
                 self.clean_subtitle_directory(subtitle_directory=f"{self.parent_directory}/{self.folder_name}/Subs")
                 self.set_media_metadata()
             elif self.file_extension[1:] in self.supported_audio_types:
+                self.verify_parent_directory()
                 self.set_media_metadata()
                 self.rename_file()
-                self.verify_parent_directory()
             self.rename_directory()
         self.reset_variables()
 
