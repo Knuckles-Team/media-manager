@@ -13,6 +13,7 @@ import asyncio
 import json
 from shazamio import Shazam
 from urllib.request import urlopen
+from media_manager.version import __version__, __author__, __credits__
 
 
 class MediaManager:
@@ -707,14 +708,18 @@ def media_manager(argv):
 
 
 def usage():
-    print(f'Usage:\n'
+    print(f'Media-Manager: A tool to manage all your media!\n'
+          f'Version: {__version__}\n'
+          f'Author: {__author__}\n'
+          f'Credits: {__credits__}\n'
+          f'\nUsage:\n'
           f'-h | --help            [ See usage ]\n'
           f'-d | --directory       [ Directory to scan for media ]\n'
           f'-m | --media-directory [ Directory to move Media ]\n'
           f'-t | --tv-directory    [ Directory to move Series ]\n'
           f'-s | --subtitle        [ Apply subtitle in media Sub folder ]\n'
           f'-v | --verbose         [ Show Output of FFMPEG ]\n'
-          f'\n'
+          f'\nExample:\n'
           f'media-manager -d "~/Downloads" -m "~/User/Media/Movies" -t "~/User/Media/TV" -s\n')
 
 
