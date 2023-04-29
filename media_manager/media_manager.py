@@ -715,9 +715,10 @@ def usage():
           f'\nUsage:\n'
           f'-h | --help            [ See usage ]\n'
           f'-d | --directory       [ Directory to scan for media ]\n'
-          f'-m | --media-directory [ Directory to move Media ]\n'
-          f'-t | --tv-directory    [ Directory to move Series ]\n'
-          f'-s | --subtitle        [ Apply subtitle in media Sub folder ]\n'
+          f'--media-directory      [ Directory to move Media ]\n'
+          f'--music-directory      [ Directory to move Music ]\n'
+          f'--tv-directory         [ Directory to move Series ]\n'
+          f'--subtitle             [ Apply subtitle in media Sub folder ]\n'
           f'-v | --verbose         [ Show Output of FFMPEG ]\n'
           f'\nExample:\n'
           f'media-manager -d "~/Downloads" -m "~/User/Media/Movies" -t "~/User/Media/TV" -s\n')
