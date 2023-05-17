@@ -667,8 +667,9 @@ def media_manager(argv):
     music_directory = os.path.join(os.path.expanduser('~'), "Downloads")
     source_directory = os.path.join(os.path.expanduser('~'), "Downloads")
     try:
-        opts, args = getopt.getopt(argv, "hvd:",
-                                   ["help", "media-directory=", "tv-directory=", "directory=", "subtitle", "verbose"])
+        opts, args = getopt.getopt(argv, "hvd:a:m:t:s",
+                                   ["help", "media-directory=", "tv-directory=", "music-directory", "directory=",
+                                    "subtitle", "verbose"])
     except getopt.GetoptError as e:
         print(f"Argument Error: {e}")
         usage()
@@ -677,18 +678,18 @@ def media_manager(argv):
         if opt in ("-h", "--help"):
             usage()
             sys.exit()
-        elif opt in ("--directory"):
+        elif opt in ("-d", "--directory"):
             source_directory = arg
-        elif opt in ("--music-directory"):
+        elif opt in ("-a", "--music-directory"):
             music_flag = True
             music_directory = arg
-        elif opt in ("--media-directory"):
+        elif opt in ("-m", "--media-directory"):
             media_flag = True
             media_directory = arg
-        elif opt in ("--tv-directory"):
+        elif opt in ("-t", "--tv-directory"):
             tv_flag = True
             tv_directory = arg
-        elif opt in ("--subtitle"):
+        elif opt in ("-s", "--subtitle"):
             subtitle_flag = True
         elif opt in ("-v", "--verbose"):
             media_manager_instance.set_verbose(quiet=False)
