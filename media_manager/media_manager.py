@@ -137,7 +137,6 @@ class MediaManager:
             'map': 0,
             'vcodec': self.video_codec,
             'acodec': self.audio_codec,
-            'overwrite_output': True,
             'metadata:g:0': f"title={self.new_file_name}",
             'metadata:g:1': f"comment={self.new_file_name}"
         }
@@ -402,13 +401,13 @@ class MediaManager:
             try:
                 ffmpeg.input(self.new_media_file_path) \
                     .output(self.temporary_media_file_path, **self.output_parameters) \
-                    .run(quiet=self.quiet)
+                    .run(quiet=self.quiet, overwrite_output=True)
             except Exception as e:
                 try:
                     self.print(f"\t\tTrying to remap using alternative method...\n\t\tError: {e}")
                     ffmpeg.input(self.new_media_file_path) \
                         .output(self.temporary_media_file_path, **self.output_parameters) \
-                        .run(quiet=self.quiet)
+                        .run(quiet=self.quiet, overwrite_output=True)
                 except Exception as e:
                     self.print(f"\t\tError trying to remap using alternative method...\n\t\tError: {e}")
             os.remove(self.new_media_file_path)
@@ -455,13 +454,13 @@ class MediaManager:
                 (ffmpeg.output(
                     input_ffmpeg['v'], input_ffmpeg['a'], input_subtitles,
                     self.temporary_media_file_path, scodec=scodec, **self.output_parameters)
-                 .run(quiet=self.quiet))
+                 .run(quiet=self.quiet, overwrite_output=True))
                 os.remove(self.new_media_file_path)
                 os.rename(self.temporary_media_file_path, self.new_media_file_path)
             elif not subtitle_exists and not os.path.isfile(subtitle_file):
                 ffmpeg.input(self.new_media_file_path) \
                     .output(self.temporary_media_file_path, **self.output_parameters) \
-                    .run(quiet=self.quiet)
+                    .run(quiet=self.quiet, overwrite_output=True)
                 os.remove(self.new_media_file_path)
                 os.rename(self.temporary_media_file_path, self.new_media_file_path)
             self.media_file_index = 0
