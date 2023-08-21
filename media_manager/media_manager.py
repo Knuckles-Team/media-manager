@@ -130,11 +130,18 @@ class MediaManager:
 
     def set_optimize(self, optimize: bool):
         self.optimize = optimize
-        self.video_codec = "libx265"
-        self.audio_codec = "aac"
-        self.output_parameters['crf'] = self.crf
-        self.output_parameters['audio_bitrate'] = self.audio_bitrate
-        self.output_parameters['preset'] = self.preset
+        if self.optimize:
+            self.video_codec = "libx265"
+            self.audio_codec = "aac"
+            self.output_parameters['crf'] = self.crf
+            self.output_parameters['audio_bitrate'] = self.audio_bitrate
+            self.output_parameters['preset'] = self.preset
+        else:
+            self.video_codec = "copy"
+            self.audio_codec = "copy"
+            self.output_parameters.pop('crf', None)
+            self.output_parameters.pop('audio_bitrate', None)
+            self.output_parameters.pop('preset', None)
 
     def build_output_parameters(self):
         self.output_parameters = {
