@@ -130,6 +130,11 @@ class MediaManager:
 
     def set_optimize(self, optimize: bool):
         self.optimize = optimize
+        self.video_codec = "libx265"
+        self.audio_codec = "aac"
+        self.output_parameters['crf'] = self.crf
+        self.output_parameters['audio_bitrate'] = self.audio_bitrate
+        self.output_parameters['preset'] = self.preset
 
     def build_output_parameters(self):
         self.output_parameters = {
@@ -525,7 +530,6 @@ class MediaManager:
 
     # Iterate through all media files found
     def clean_media(self):
-        self.build_output_parameters()
         while self.media_file_index < len(self.media_files):
             file_length = len(str(os.path.basename(self.media_files[self.media_file_index])))
             truncate_amount = 0
@@ -547,6 +551,7 @@ class MediaManager:
             self.media_file = os.path.basename(self.media_files[self.media_file_index])
             self.file_name, self.file_extension = os.path.splitext(self.media_file)
             self.new_file_name = self.file_name
+            self.build_output_parameters()
             self.media_detection()
             if self.file_extension[1:] in self.supported_video_types:
                 self.clean_file_name()
