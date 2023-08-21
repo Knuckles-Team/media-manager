@@ -1,5 +1,5 @@
 # Media Manager
-*Version: 0.62.0*
+*Version: 0.63.0*
 
 Manage your media
 - Automatically clean file names 
