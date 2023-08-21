@@ -103,6 +103,7 @@ class MediaManager:
         self.filters = self.movie_filters
         self.media_type = "media"
         self.subtitle = False
+        self.optimize = False
         self.media_file_index = 0
         self.audio_tags = None
         try:
@@ -114,12 +115,31 @@ class MediaManager:
         self.shazam = Shazam()
         self.supported_audio_types = ['mp3', 'm4a', 'flac', 'aac', 'aiff', 'dsf', 'ogg', 'opus', 'wav', 'wv']
         self.supported_video_types = ['mp4', 'mkv']
+        self.video_codec = "copy"
+        self.audio_codec = "copy"
+        self.preset = "medium"
+        self.audio_bitrate = '128k'
+        self.crf = 28
 
     def set_verbose(self, quiet=True):
         self.quiet = quiet
 
     def set_subtitle(self, subtitle: bool):
         self.subtitle = subtitle
+
+    def set_optimize(self, optimize: bool):
+        self.optimize = optimize
+        self.video_codec = "libx265"
+        self.audio_codec = "aac"
+
+    def set_crf(self, crf):
+        self.crf = crf
+
+    def set_preset(self, preset):
+        self.preset = preset
+
+    def set_audio_bitrate(self, audio_bitrate):
+        self.audio_bitrate = audio_bitrate
 
     def set_media_directory(self, media_directory: str):
         self.media_directory = os.path.normpath(os.path.join(media_directory, ''))
@@ -149,7 +169,8 @@ class MediaManager:
             try:
                 self.audio_tags = music_tag.load_file(os.path.normpath(os.path.join(self.directory, self.media_file)))
             except Exception as e:
-                print(f"Unable to open file {os.path.normpath(os.path.join(self.directory, self.media_file))}: \n{e}...\n\nTrying new File Path: {self.new_media_file_path}...")
+                print(
+                    f"Unable to open file {os.path.normpath(os.path.join(self.directory, self.media_file))}: \n{e}...\n\nTrying new File Path: {self.new_media_file_path}...")
                 try:
                     self.audio_tags = music_tag.load_file(self.new_media_file_path)
                 except Exception as e2:
@@ -212,9 +233,9 @@ class MediaManager:
                 self.print(f"\tMerging parent directories: {os.path.join(self.parent_directory, '')}")
             self.directory = self.parent_directory
             self.new_media_file_path = os.path.normpath(
-                                           os.path.join(
-                                               self.directory,
-                                               f"{self.new_file_name}{self.file_extension}"))
+                os.path.join(
+                    self.directory,
+                    f"{self.new_file_name}{self.file_extension}"))
             self.media_file = self.new_media_file_path
             print(f"New Media Path: {self.new_media_file_path}")
             self.parent_directory = os.path.join(self.parent_directory, os.pardir)
@@ -372,7 +393,8 @@ class MediaManager:
                 ffmpeg.input(self.new_media_file_path) \
                     .output(self.temporary_media_file_path,
                             map_metadata=0,
-                            map=0, vcodec='copy', acodec='copy',
+                            map=0, vcodec=self.video_codec, acodec=self.audio_codec, crf=self.crf, preset=self.preset,
+                            audio_bitrate=self.audio_bitrate,
                             **{'metadata:g:0': f"title={self.new_file_name}",
                                'metadata:g:1': f"comment={self.new_file_name}"}) \
                     .overwrite_output() \
@@ -382,7 +404,9 @@ class MediaManager:
                     self.print(f"\t\tTrying to remap using alternative method...\n\t\tError: {e}")
                     ffmpeg.input(self.new_media_file_path) \
                         .output(self.temporary_media_file_path,
-                                map_metadata=0, vcodec='copy', acodec='copy',
+                                map_metadata=0,
+                                vcodec=self.video_codec, acodec=self.audio_codec, crf=self.crf, preset=self.preset,
+                                audio_bitrate=self.audio_bitrate,
                                 **{'metadata:g:0': f"title={self.new_file_name}",
                                    'metadata:g:1': f"comment={self.new_file_name}"}) \
                         .overwrite_output() \
@@ -430,8 +454,10 @@ class MediaManager:
                 input_ffmpeg_subtitle = ffmpeg.input(subtitle_file)
                 input_subtitles = input_ffmpeg_subtitle['s']
                 ffmpeg.output(
-                    input_ffmpeg['v'], input_ffmpeg['a'], input_subtitles, self.temporary_media_file_path,
-                    vcodec='copy', acodec='copy', scodec=scodec,
+                    input_ffmpeg['v'], input_ffmpeg['a'], input_subtitles,
+                    self.temporary_media_file_path,
+                    vcodec=self.video_codec, acodec=self.audio_codec, scodec=scodec, crf=self.crf, preset=self.preset,
+                    audio_bitrate=self.audio_bitrate,
                     **{'metadata:g:0': f"title={self.new_file_name}", 'metadata:g:1': f"comment={self.new_file_name}",
                        'metadata:s:s:0': "language=" + "en", 'metadata:s:s:0': "title=" + "English",
                        'metadata:s:s:1': "language=" + "sp", 'metadata:s:s:1': "title=" + "Spanish"}
@@ -442,7 +468,8 @@ class MediaManager:
                 ffmpeg.input(self.new_media_file_path) \
                     .output(self.temporary_media_file_path,
                             map_metadata=0,
-                            map=0, vcodec='copy', acodec='copy',
+                            map=0, vcodec=self.video_codec, acodec=self.audio_codec, crf=self.crf, preset=self.preset,
+                            audio_bitrate=self.audio_bitrate,
                             **{'metadata:g:0': f"title={self.new_file_name}",
                                'metadata:g:1': f"comment={self.new_file_name}"}) \
                     .overwrite_output() \
@@ -662,14 +689,19 @@ def media_manager(argv):
     music_flag = False
     tv_flag = False
     subtitle_flag = False
+    optimize_flag = False
+    audio_bitrate = '128k'
+    preset = 'medium'
+    crf = 28
     tv_directory = os.path.join(os.path.expanduser('~'), "Downloads")
     media_directory = os.path.join(os.path.expanduser('~'), "Downloads")
     music_directory = os.path.join(os.path.expanduser('~'), "Downloads")
     source_directory = os.path.join(os.path.expanduser('~'), "Downloads")
     try:
         opts, args = getopt.getopt(argv, "hvd:a:m:t:s",
-                                   ["help", "media-directory=", "tv-directory=", "music-directory", "directory=",
-                                    "subtitle", "verbose"])
+                                   ["help", "crf=", "audio-bitrate=", "media-directory=", "tv-directory=",
+                                    "music-directory", "directory=", "preset=",
+                                    "subtitle", "verbose", "optimize"])
     except getopt.GetoptError as e:
         print(f"Argument Error: {e}")
         usage()
@@ -678,6 +710,10 @@ def media_manager(argv):
         if opt in ("-h", "--help"):
             usage()
             sys.exit()
+        elif opt in ("--audio-bitrate"):
+            audio_bitrate = arg
+        elif opt in ("--crf"):
+            crf = arg
         elif opt in ("-d", "--directory"):
             source_directory = arg
         elif opt in ("-a", "--music-directory"):
@@ -686,6 +722,10 @@ def media_manager(argv):
         elif opt in ("-m", "--media-directory"):
             media_flag = True
             media_directory = arg
+        elif opt in ("-o", "--optimize"):
+            optimize_flag = True
+        elif opt in ("--preset"):
+            preset = arg.lower()
         elif opt in ("-t", "--tv-directory"):
             tv_flag = True
             tv_directory = arg
@@ -696,6 +736,10 @@ def media_manager(argv):
 
     media_manager_instance.set_media_directory(media_directory=source_directory)
     media_manager_instance.find_media()
+    media_manager_instance.set_crf(crf=crf)
+    media_manager_instance.set_preset(preset=preset)
+    media_manager_instance.set_audio_bitrate(audio_bitrate=audio_bitrate)
+    media_manager_instance.set_optimize(optimize=optimize_flag)
     media_manager_instance.set_subtitle(subtitle=subtitle_flag)
     media_manager_instance.clean_media()
 
