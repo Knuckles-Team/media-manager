@@ -117,7 +117,7 @@ class MediaManager:
         self.supported_video_types = ['mp4', 'mkv']
         self.video_codec = "copy"
         self.audio_codec = "copy"
-        self.extra_parameters = []
+        self.output_parameters = {}
         self.preset = "medium"
         self.audio_bitrate = '128k'
         self.crf = 28
@@ -130,11 +130,17 @@ class MediaManager:
 
     def set_optimize(self, optimize: bool):
         self.optimize = optimize
-        self.video_codec = "libx265"
-        self.audio_codec = "aac"
-        self.extra_parameters.append(f"preset={self.preset}")
-        self.extra_parameters.append(f"audio_bitrate={self.audio_bitrate}")
-        self.extra_parameters.append(f"crf={self.crf}")
+
+    def build_output_parameters(self):
+        self.output_parameters = {
+            'map_metadata': 0,
+            'map': 0,
+            'vcodec': self.video_codec,
+            'acodec': self.audio_codec,
+            'overwrite_output': True,
+            'metadata:g:0': f"title={self.new_file_name}",
+            'metadata:g:1': f"comment={self.new_file_name}"
+        }
 
     def set_crf(self, crf):
         self.crf = crf
@@ -395,23 +401,13 @@ class MediaManager:
         if current_title_metadata != self.new_file_name and self.subtitle is False:
             try:
                 ffmpeg.input(self.new_media_file_path) \
-                    .output(self.temporary_media_file_path,
-                            map_metadata=0,
-                            map=0, vcodec=self.video_codec, acodec=self.audio_codec, *self.extra_parameters,
-                            **{'metadata:g:0': f"title={self.new_file_name}",
-                               'metadata:g:1': f"comment={self.new_file_name}"}) \
-                    .overwrite_output() \
+                    .output(self.temporary_media_file_path, **self.output_parameters) \
                     .run(quiet=self.quiet)
             except Exception as e:
                 try:
                     self.print(f"\t\tTrying to remap using alternative method...\n\t\tError: {e}")
                     ffmpeg.input(self.new_media_file_path) \
-                        .output(self.temporary_media_file_path,
-                                map_metadata=0,
-                                vcodec=self.video_codec, acodec=self.audio_codec, *self.extra_parameters,
-                                **{'metadata:g:0': f"title={self.new_file_name}",
-                                   'metadata:g:1': f"comment={self.new_file_name}"}) \
-                        .overwrite_output() \
+                        .output(self.temporary_media_file_path, **self.output_parameters) \
                         .run(quiet=self.quiet)
                 except Exception as e:
                     self.print(f"\t\tError trying to remap using alternative method...\n\t\tError: {e}")
@@ -423,7 +419,8 @@ class MediaManager:
             subtitle_files = []
             if self.media_type == "series" and os.path.isdir(f"{self.parent_directory}/{self.folder_name}/Subs"):
                 matching_video = 0
-                subtitle_directories = glob.glob(f"{self.parent_directory}/{self.folder_name}/Subs/*/", recursive=True)
+                subtitle_directories = glob.glob(f"{self.parent_directory}/{self.folder_name}/Subs/*/",
+                                                 recursive=True)
                 subtitle_directories.sort()
                 for subtitle_directory_index in range(0, len(subtitle_directories)):
                     if self.new_file_name in subtitle_directories[subtitle_directory_index]:
@@ -455,24 +452,15 @@ class MediaManager:
                 input_ffmpeg = ffmpeg.input(self.new_media_file_path)
                 input_ffmpeg_subtitle = ffmpeg.input(subtitle_file)
                 input_subtitles = input_ffmpeg_subtitle['s']
-                ffmpeg.output(
+                (ffmpeg.output(
                     input_ffmpeg['v'], input_ffmpeg['a'], input_subtitles,
-                    self.temporary_media_file_path,
-                    vcodec=self.video_codec, acodec=self.audio_codec, scodec=scodec, *self.extra_parameters,
-                    **{'metadata:g:0': f"title={self.new_file_name}", 'metadata:g:1': f"comment={self.new_file_name}",
-                       'metadata:s:s:0': "language=" + "en", 'metadata:s:s:0': "title=" + "English",
-                       'metadata:s:s:1': "language=" + "sp", 'metadata:s:s:1': "title=" + "Spanish"}
-                ).overwrite_output().run(quiet=self.quiet)
+                    self.temporary_media_file_path, scodec=scodec, **self.output_parameters)
+                 .run(quiet=self.quiet))
                 os.remove(self.new_media_file_path)
                 os.rename(self.temporary_media_file_path, self.new_media_file_path)
             elif not subtitle_exists and not os.path.isfile(subtitle_file):
                 ffmpeg.input(self.new_media_file_path) \
-                    .output(self.temporary_media_file_path,
-                            map_metadata=0,
-                            map=0, vcodec=self.video_codec, acodec=self.audio_codec, *self.extra_parameters,
-                            **{'metadata:g:0': f"title={self.new_file_name}",
-                               'metadata:g:1': f"comment={self.new_file_name}"}) \
-                    .overwrite_output() \
+                    .output(self.temporary_media_file_path, **self.output_parameters) \
                     .run(quiet=self.quiet)
                 os.remove(self.new_media_file_path)
                 os.rename(self.temporary_media_file_path, self.new_media_file_path)
@@ -535,6 +523,7 @@ class MediaManager:
 
     # Iterate through all media files found
     def clean_media(self):
+        self.build_output_parameters()
         while self.media_file_index < len(self.media_files):
             file_length = len(str(os.path.basename(self.media_files[self.media_file_index])))
             truncate_amount = 0
