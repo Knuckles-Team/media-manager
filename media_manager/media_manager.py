@@ -117,6 +117,7 @@ class MediaManager:
         self.supported_video_types = ['mp4', 'mkv']
         self.video_codec = "copy"
         self.audio_codec = "copy"
+        self.extra_parameters = []
         self.preset = "medium"
         self.audio_bitrate = '128k'
         self.crf = 28
@@ -131,6 +132,9 @@ class MediaManager:
         self.optimize = optimize
         self.video_codec = "libx265"
         self.audio_codec = "aac"
+        self.extra_parameters.append(f"preset={self.preset}")
+        self.extra_parameters.append(f"audio_bitrate={self.audio_bitrate}")
+        self.extra_parameters.append(f"crf={self.crf}")
 
     def set_crf(self, crf):
         self.crf = crf
@@ -393,8 +397,7 @@ class MediaManager:
                 ffmpeg.input(self.new_media_file_path) \
                     .output(self.temporary_media_file_path,
                             map_metadata=0,
-                            map=0, vcodec=self.video_codec, acodec=self.audio_codec, crf=self.crf, preset=self.preset,
-                            audio_bitrate=self.audio_bitrate,
+                            map=0, vcodec=self.video_codec, acodec=self.audio_codec, *self.extra_parameters,
                             **{'metadata:g:0': f"title={self.new_file_name}",
                                'metadata:g:1': f"comment={self.new_file_name}"}) \
                     .overwrite_output() \
@@ -405,8 +408,7 @@ class MediaManager:
                     ffmpeg.input(self.new_media_file_path) \
                         .output(self.temporary_media_file_path,
                                 map_metadata=0,
-                                vcodec=self.video_codec, acodec=self.audio_codec, crf=self.crf, preset=self.preset,
-                                audio_bitrate=self.audio_bitrate,
+                                vcodec=self.video_codec, acodec=self.audio_codec, *self.extra_parameters,
                                 **{'metadata:g:0': f"title={self.new_file_name}",
                                    'metadata:g:1': f"comment={self.new_file_name}"}) \
                         .overwrite_output() \
@@ -456,8 +458,7 @@ class MediaManager:
                 ffmpeg.output(
                     input_ffmpeg['v'], input_ffmpeg['a'], input_subtitles,
                     self.temporary_media_file_path,
-                    vcodec=self.video_codec, acodec=self.audio_codec, scodec=scodec, crf=self.crf, preset=self.preset,
-                    audio_bitrate=self.audio_bitrate,
+                    vcodec=self.video_codec, acodec=self.audio_codec, scodec=scodec, *self.extra_parameters,
                     **{'metadata:g:0': f"title={self.new_file_name}", 'metadata:g:1': f"comment={self.new_file_name}",
                        'metadata:s:s:0': "language=" + "en", 'metadata:s:s:0': "title=" + "English",
                        'metadata:s:s:1': "language=" + "sp", 'metadata:s:s:1': "title=" + "Spanish"}
@@ -468,8 +469,7 @@ class MediaManager:
                 ffmpeg.input(self.new_media_file_path) \
                     .output(self.temporary_media_file_path,
                             map_metadata=0,
-                            map=0, vcodec=self.video_codec, acodec=self.audio_codec, crf=self.crf, preset=self.preset,
-                            audio_bitrate=self.audio_bitrate,
+                            map=0, vcodec=self.video_codec, acodec=self.audio_codec, *self.extra_parameters,
                             **{'metadata:g:0': f"title={self.new_file_name}",
                                'metadata:g:1': f"comment={self.new_file_name}"}) \
                     .overwrite_output() \
