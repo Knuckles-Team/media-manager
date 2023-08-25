@@ -405,11 +405,14 @@ class MediaManager:
                 current_title_metadata = ffmpeg.probe(self.new_media_file_path)['format']['tags']['title']
             else:
                 current_title_metadata = ""
+            video_codec = next(s for s in ffmpeg.probe(self.new_media_file_path)['streams'] if s['codec_type'] == 'video')['codec_name']
+            print(f"Video Codec Detected: {video_codec}")
         except Exception as e:
             current_title_metadata = ""
+            video_codec = ""
             self.print(f"Error reading metadata: {e}")
         current_index = self.media_file_index
-        if (current_title_metadata != self.new_file_name or self.optimize) and self.subtitle is False:
+        if (current_title_metadata != self.new_file_name or (self.optimize and video_codec != "libx265")) and self.subtitle is False:
             try:
                 ffmpeg.input(self.new_media_file_path) \
                     .output(self.temporary_media_file_path, **self.output_parameters) \
@@ -427,7 +430,7 @@ class MediaManager:
             os.remove(self.new_media_file_path)
             os.rename(self.temporary_media_file_path, self.new_media_file_path)
             self.media_file_index = 0
-        elif (current_title_metadata != self.new_file_name or self.optimize) and self.subtitle is True:
+        elif (current_title_metadata != self.new_file_name or (self.optimize and video_codec != "libx265")) and self.subtitle is True:
             subtitle_file = "English.srt"
             subtitle_files = []
             if self.media_type == "series" and os.path.isdir(f"{self.parent_directory}/{self.folder_name}/Subs"):
