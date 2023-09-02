@@ -117,6 +117,7 @@ class MediaManager:
         self.shazam = Shazam()
         self.supported_audio_types = ['mp3', 'm4a', 'flac', 'aac', 'aiff', 'dsf', 'ogg', 'opus', 'wav', 'wv']
         self.supported_video_types = ['mp4', 'mkv']
+        self.supported_photo_types = ['png', 'jpg', 'jpeg']
         self.video_codec = "copy"
         self.audio_codec = "copy"
         self.output_parameters = {}
@@ -216,7 +217,6 @@ class MediaManager:
             self.media_type = "photos"
             self.audio_tags = None
 
-
     # Clean filename
     def clean_file_name(self):
         for key in self.filters:
@@ -230,6 +230,24 @@ class MediaManager:
         elif self.media_type == "music":
             if self.audio_tags['artist'].value:
                 self.folder_name = self.audio_tags['artist'].value
+        elif self.media_type == "photos":
+            with Image.open(self.media_file) as img:
+                try:
+                    # Get the timestamp from the image (if available)
+                    exif_data = img._getexif()
+                    if 36867 in exif_data:
+                        timestamp = exif_data[36867]
+                        # Convert the timestamp to a datetime object
+                        date_taken = datetime.datetime.strptime(timestamp, "%Y:%m:%d %H:%M:%S")
+                        self.folder_name = date_taken.strftime("%Y-%m")
+                except (AttributeError, KeyError, TypeError):
+                    file_name, file_extension = os.path.splitext(os.path.basename(self.media_file))
+                    try:
+                        date_taken = datetime.datetime.strptime(file_name, "%Y%m%d_%H%M%S")
+                        self.folder_name = date_taken.strftime("%Y-%m")
+                    except (AttributeError, KeyError, TypeError):
+                        self.folder_name = "Unknown"
+                        print(f"EXIF DATA: {exif_data}")
 
         # Check if media file does not have it's own folder, and create it if it does not
         self.print(f"\tVerifying Media Parent Directory:\n\t\t"
@@ -505,6 +523,24 @@ class MediaManager:
             self.folder_name = re.sub(" - S[0-9]+E[0-9]+", "", self.new_file_name)
         elif self.media_type == "media":
             self.folder_name = self.new_file_name
+        elif self.media_type == "photos":
+            with Image.open(self.media_file) as img:
+                try:
+                    # Get the timestamp from the image (if available)
+                    exif_data = img._getexif()
+                    if 36867 in exif_data:
+                        timestamp = exif_data[36867]
+                        # Convert the timestamp to a datetime object
+                        date_taken = datetime.datetime.strptime(timestamp, "%Y:%m:%d %H:%M:%S")
+                        self.folder_name = date_taken.strftime("%Y-%m")
+                except (AttributeError, KeyError, TypeError):
+                    file_name, file_extension = os.path.splitext(os.path.basename(self.media_file))
+                    try:
+                        date_taken = datetime.datetime.strptime(file_name, "%Y%m%d_%H%M%S")
+                        self.folder_name = date_taken.strftime("%Y-%m")
+                    except (AttributeError, KeyError, TypeError):
+                        self.folder_name = "Unknown"
+                        print(f"EXIF DATA: {exif_data}")
         # self.parent_directory = os.path.dirname(os.path.normpath(self.directory))
         # Check if media folder name is the same as what is proposed
         if os.path.normpath(os.path.join(self.directory, '')) != os.path.normpath(
@@ -586,23 +622,7 @@ class MediaManager:
                 self.set_media_metadata()
                 self.rename_file()
             elif self.file_extension[1:] in self.supported_photo_types:
-                with Image.open(file_path) as img:
-                    try:
-                        # Get the timestamp from the image (if available)
-                        exif_data = img._getexif()
-                        if 36867 in exif_data:
-                            timestamp = exif_data[36867]
-                            # Convert the timestamp to a datetime object
-                            date_taken = datetime.datetime.strptime(timestamp, "%Y:%m:%d %H:%M:%S")
-                            return date_taken
-                    except (AttributeError, KeyError, TypeError):
-                        print(f"EXIF DATA: {exif_data}")
-                        file_name, file_extension = os.path.splitext(os.path.basename(file_path))
-                        try:
-                            date_taken = datetime.datetime.strptime(file_name, "%Y%m%d_%H%M%S")
-                        except (AttributeError, KeyError, TypeError):
-                            return None
-                        return date_taken
+                self.verify_parent_directory()
             self.rename_directory()
         self.reset_variables()
 
