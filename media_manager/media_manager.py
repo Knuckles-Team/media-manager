@@ -11,8 +11,10 @@ import glob
 import music_tag
 import asyncio
 import json
+import datetime
 from shazamio import Shazam
 from urllib.request import urlopen
+from PIL import Image
 from media_manager.version import __version__, __author__, __credits__
 
 
@@ -210,6 +212,10 @@ class MediaManager:
                 self.filters = self.movie_filters
                 self.media_type = "media"
                 self.print(f"\tDetected media type: Media")
+        elif self.file_extension[1:] in self.supported_photo_types:
+            self.media_type = "photos"
+            self.audio_tags = None
+
 
     # Clean filename
     def clean_file_name(self):
@@ -282,8 +288,8 @@ class MediaManager:
                 self.media_files.append(os.path.join(file))
                 self.media_file_directories.append(os.path.dirname(file))
                 self.media_file_directories = [*set(self.media_file_directories)]
-            elif file.endswith(".nfo") or file.endswith(".exe"):
-                os.remove(file)
+            # elif file.endswith(".nfo") or file.endswith(".exe"):
+            #     os.remove(file)
         self.media_files.sort()
         for i in self.completed_media_files:
             # print(f"\t\tVerifying completed: {i}")
@@ -405,14 +411,17 @@ class MediaManager:
                 current_title_metadata = ffmpeg.probe(self.new_media_file_path)['format']['tags']['title']
             else:
                 current_title_metadata = ""
-            video_codec = next(s for s in ffmpeg.probe(self.new_media_file_path)['streams'] if s['codec_type'] == 'video')['codec_name']
+            video_codec = \
+            next(s for s in ffmpeg.probe(self.new_media_file_path)['streams'] if s['codec_type'] == 'video')[
+                'codec_name']
             print(f"Video Codec Detected: {video_codec}")
         except Exception as e:
             current_title_metadata = ""
             video_codec = ""
             self.print(f"Error reading metadata: {e}")
         current_index = self.media_file_index
-        if (current_title_metadata != self.new_file_name or (self.optimize and video_codec != "hevc")) and self.subtitle is False:
+        if (current_title_metadata != self.new_file_name or (
+                self.optimize and video_codec != "hevc")) and self.subtitle is False:
             try:
                 ffmpeg.input(self.new_media_file_path) \
                     .output(self.temporary_media_file_path, **self.output_parameters) \
@@ -430,7 +439,8 @@ class MediaManager:
             os.remove(self.new_media_file_path)
             os.rename(self.temporary_media_file_path, self.new_media_file_path)
             self.media_file_index = 0
-        elif (current_title_metadata != self.new_file_name or (self.optimize and video_codec != "hevc")) and self.subtitle is True:
+        elif (current_title_metadata != self.new_file_name or (
+                self.optimize and video_codec != "hevc")) and self.subtitle is True:
             subtitle_file = "English.srt"
             subtitle_files = []
             if self.media_type == "series" and os.path.isdir(f"{self.parent_directory}/{self.folder_name}/Subs"):
@@ -547,14 +557,14 @@ class MediaManager:
                 truncate_amount = abs(self.max_file_length - file_length)
             pretty_print_filename = str(os.path.basename(self.media_files[self.media_file_index]))
             pretty_print_filename = pretty_print_filename[truncate_amount:file_length]
-            processing_message = f"Processing ({self.media_file_index + 1}/" \
-                                 f"{self.total_media_files}): " \
-                                 f"{pretty_print_filename}"
+            # processing_message = f"Processing ({self.media_file_index + 1}/" \
+            #                      f"{self.total_media_files}): " \
+            #                      f"{pretty_print_filename}"
             print(f"Processing ({self.media_file_index + 1}/"
                   f"{self.total_media_files}): "
                   f"{pretty_print_filename}")
-            processing_message = processing_message.ljust(self.terminal_width)
-            self.print(processing_message, end='\r')
+            # processing_message = processing_message.ljust(self.terminal_width)
+            # self.print(processing_message, end='\r')
             self.directory = os.path.normpath(os.path.dirname(self.media_files[self.media_file_index]))
             if not self.directory.endswith(os.path.sep):
                 self.directory += os.path.sep
@@ -575,6 +585,24 @@ class MediaManager:
                 self.verify_parent_directory()
                 self.set_media_metadata()
                 self.rename_file()
+            elif self.file_extension[1:] in self.supported_photo_types:
+                with Image.open(file_path) as img:
+                    try:
+                        # Get the timestamp from the image (if available)
+                        exif_data = img._getexif()
+                        if 36867 in exif_data:
+                            timestamp = exif_data[36867]
+                            # Convert the timestamp to a datetime object
+                            date_taken = datetime.datetime.strptime(timestamp, "%Y:%m:%d %H:%M:%S")
+                            return date_taken
+                    except (AttributeError, KeyError, TypeError):
+                        print(f"EXIF DATA: {exif_data}")
+                        file_name, file_extension = os.path.splitext(os.path.basename(file_path))
+                        try:
+                            date_taken = datetime.datetime.strptime(file_name, "%Y%m%d_%H%M%S")
+                        except (AttributeError, KeyError, TypeError):
+                            return None
+                        return date_taken
             self.rename_directory()
         self.reset_variables()
 
@@ -602,7 +630,15 @@ class MediaManager:
                         and re.search("s[0-9][0-9]*e[0-9][0-9]*", file) is None:
                     move = True
                     break
-                if media_type == "music" and (bool(re.search(".mp3", file)) or bool(re.search(".m4a", file))):
+                if (media_type == "music"
+                        and (bool(re.search(".mp3", file))
+                             or bool(re.search(".m4a", file)))):
+                    move = True
+                    break
+                if (media_type == "photos"
+                        and (bool(re.search(".png", file))
+                             or bool(re.search(".jpg", file))
+                             or bool(re.search(".jpeg", file)))):
                     move = True
                     break
             file_length = len(str(os.path.basename(self.media_file_directories[media_directory_index])))
@@ -694,6 +730,7 @@ def media_manager(argv):
     media_flag = False
     music_flag = False
     tv_flag = False
+    photo_flag = False
     subtitle_flag = False
     optimize_flag = False
     audio_bitrate = '128k'
@@ -702,11 +739,12 @@ def media_manager(argv):
     tv_directory = os.path.join(os.path.expanduser('~'), "Downloads")
     media_directory = os.path.join(os.path.expanduser('~'), "Downloads")
     music_directory = os.path.join(os.path.expanduser('~'), "Downloads")
+    photo_directory = os.path.join(os.path.expanduser('~'), "Downloads")
     source_directory = os.path.join(os.path.expanduser('~'), "Downloads")
     try:
-        opts, args = getopt.getopt(argv, "hvd:a:m:t:s",
+        opts, args = getopt.getopt(argv, "hvd:a:m:p:t:s",
                                    ["help", "crf=", "audio-bitrate=", "media-directory=", "tv-directory=",
-                                    "music-directory", "directory=", "preset=",
+                                    "music-directory=", "photo-directory=", "directory=", "preset=",
                                     "subtitle", "verbose", "optimize"])
     except getopt.GetoptError as e:
         print(f"Argument Error: {e}")
@@ -728,6 +766,9 @@ def media_manager(argv):
         elif opt in ("-m", "--media-directory"):
             media_flag = True
             media_directory = arg
+        elif opt in ("-p", "--photo-directory"):
+            photo_flag = True
+            photo_directory = arg
         elif opt in ("-o", "--optimize"):
             optimize_flag = True
         elif opt in ("--preset"):
@@ -742,11 +783,16 @@ def media_manager(argv):
 
     media_manager_instance.set_media_directory(media_directory=source_directory)
     media_manager_instance.find_media()
+    # For Video Optimization Quality
     media_manager_instance.set_crf(crf=crf)
     media_manager_instance.set_preset(preset=preset)
-    media_manager_instance.set_audio_bitrate(audio_bitrate=audio_bitrate)
+    # For Video Processing
     media_manager_instance.set_optimize(optimize=optimize_flag)
+    # For Subtitles in Videos
     media_manager_instance.set_subtitle(subtitle=subtitle_flag)
+    # For Audio Processing
+    media_manager_instance.set_audio_bitrate(audio_bitrate=audio_bitrate)
+    # Cleans Media
     media_manager_instance.clean_media()
 
     if tv_flag:
@@ -755,6 +801,8 @@ def media_manager(argv):
         media_manager_instance.move_media(target_directory=media_directory, media_type="media")
     if music_flag:
         media_manager_instance.move_media(target_directory=music_directory, media_type="music")
+    if photo_flag:
+        media_manager_instance.move_media(target_directory=photo_directory, media_type="photos")
     print("Complete!")
 
 
@@ -767,8 +815,9 @@ def usage():
           f'-h | --help            [ See usage ]\n'
           f'-d | --directory       [ Directory to scan for media ]\n'
           f'--media-directory      [ Directory to move Media ]\n'
-          f'--music-directory      [ Directory to move Music ]\n'
           f'--tv-directory         [ Directory to move Series ]\n'
+          f'--music-directory      [ Directory to move Music ]\n'
+          f'--photo-directory      [ Directory to move Photos ]\n'
           f'--subtitle             [ Apply subtitle in media Sub folder ]\n'
           f'-v | --verbose         [ Show Output of FFMPEG ]\n'
           f'\nExample:\n'
