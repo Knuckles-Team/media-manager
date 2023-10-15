@@ -33,6 +33,8 @@ Supports Media:
 - MKV
 - MP4
 
+This repository is actively maintained - Contributions are welcome!
+
 <details>
   <summary><b>Usage:</b></summary>
 
