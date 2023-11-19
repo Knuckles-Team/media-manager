@@ -42,6 +42,7 @@ This repository is actively maintained - Contributions are welcome!
 |------------|-------------------|-----------------------------------------|
 | -h         | --help            | See usage                               |
 |            | --subtitle        | Apply Subtitle in local "Sub" directory |
+|            | --optimize        | Optimize video for streaming in HEVC    |
 |            | --media-directory | Move media to directory                 |
 |            | --music-directory | Move music to directory                 |
 |            | --tv-directory    | Move series to directory                |

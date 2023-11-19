@@ -412,7 +412,9 @@ class MediaManager:
             video_codec = ""
             self.print(f"Error reading metadata: {e}")
         current_index = self.media_file_index
-        if (current_title_metadata != self.new_file_name or (self.optimize and video_codec != "hevc")) and self.subtitle is False:
+        if ((current_title_metadata != self.new_file_name or (self.optimize and video_codec != "hevc"))
+                and self.subtitle is False):
+            failure = False
             try:
                 ffmpeg.input(self.new_media_file_path) \
                     .output(self.temporary_media_file_path, **self.output_parameters) \
@@ -426,9 +428,34 @@ class MediaManager:
                         .overwrite_output() \
                         .run(quiet=self.quiet, overwrite_output=True)
                 except Exception as e:
-                    self.print(f"\t\tError trying to remap using alternative method...\n\t\tError: {e}")
-            os.remove(self.new_media_file_path)
-            os.rename(self.temporary_media_file_path, self.new_media_file_path)
+                    try:
+                        self.print(f"\t\tTrying to remap using alternative optimized method...\n\t\tError: {e}")
+                        self.video_codec = "libx265"
+                        self.audio_codec = "aac"
+                        self.output_parameters['crf'] = self.crf
+                        self.output_parameters['audio_bitrate'] = self.audio_bitrate
+                        self.output_parameters['preset'] = self.preset
+                        output_parameters = {
+                            'map_metadata': 0,
+                            'map': 0,
+                            'vcodec': self.video_codec,
+                            'acodec': self.audio_codec,
+                            'metadata:g:0': f"title={self.new_file_name}",
+                            'metadata:g:1': f"comment={self.new_file_name}",
+                            'crf': self.crf,
+                            'audio_bitrate': self.audio_bitrate,
+                            'preset': self.preset,
+                        }
+                        ffmpeg.input(self.new_media_file_path) \
+                            .output(self.temporary_media_file_path, **output_parameters) \
+                            .overwrite_output() \
+                            .run(quiet=self.quiet, overwrite_output=True)
+                    except Exception as e:
+                        self.print(f"\t\tError trying to remap using alternative method...\n\t\tError: {e}")
+                        failure = True
+            if not failure:
+                os.remove(self.new_media_file_path)
+                os.rename(self.temporary_media_file_path, self.new_media_file_path)
             self.media_file_index = 0
         elif (current_title_metadata != self.new_file_name or (self.optimize and video_codec != "hevc")) and self.subtitle is True:
             subtitle_file = "English.srt"
@@ -464,23 +491,32 @@ class MediaManager:
                 if "subtitle" in stream['codec_type']:
                     subtitle_exists = True
 
+            failure = False
             if not subtitle_exists and os.path.isfile(subtitle_file):
                 input_ffmpeg = ffmpeg.input(self.new_media_file_path)
                 input_ffmpeg_subtitle = ffmpeg.input(subtitle_file)
                 input_subtitles = input_ffmpeg_subtitle['s']
-                (ffmpeg.output(
-                    input_ffmpeg['v'], input_ffmpeg['a'], input_subtitles,
-                    self.temporary_media_file_path, scodec=scodec, **self.output_parameters)
-                 .overwrite_output().run(quiet=self.quiet, overwrite_output=True))
-                os.remove(self.new_media_file_path)
-                os.rename(self.temporary_media_file_path, self.new_media_file_path)
+                try:
+                    (ffmpeg.output(
+                        input_ffmpeg['v'], input_ffmpeg['a'], input_subtitles,
+                        self.temporary_media_file_path, scodec=scodec, **self.output_parameters)
+                     .overwrite_output().run(quiet=self.quiet, overwrite_output=True))
+                except Exception as e:
+                    failure = True
+                if not failure:
+                    os.remove(self.new_media_file_path)
+                    os.rename(self.temporary_media_file_path, self.new_media_file_path)
             elif not subtitle_exists and not os.path.isfile(subtitle_file):
-                ffmpeg.input(self.new_media_file_path) \
-                    .output(self.temporary_media_file_path, **self.output_parameters) \
-                    .overwrite_output() \
-                    .run(quiet=self.quiet, overwrite_output=True)
-                os.remove(self.new_media_file_path)
-                os.rename(self.temporary_media_file_path, self.new_media_file_path)
+                try:
+                    ffmpeg.input(self.new_media_file_path) \
+                        .output(self.temporary_media_file_path, **self.output_parameters) \
+                        .overwrite_output() \
+                        .run(quiet=self.quiet, overwrite_output=True)
+                except Exception as e:
+                    failure = True
+                if not failure:
+                    os.remove(self.new_media_file_path)
+                    os.rename(self.temporary_media_file_path, self.new_media_file_path)
             self.media_file_index = 0
         else:
             self.media_file_index += 1
@@ -770,6 +806,7 @@ def usage():
           f'--music-directory      [ Directory to move Music ]\n'
           f'--tv-directory         [ Directory to move Series ]\n'
           f'--subtitle             [ Apply subtitle in media Sub folder ]\n'
+          f'--optimize             [ Optimize video for streaming in HEVC ]\n'
           f'-v | --verbose         [ Show Output of FFMPEG ]\n'
           f'\nExample:\n'
           f'media-manager -d "~/Downloads" -m "~/User/Media/Movies" -t "~/User/Media/TV" -s\n')
