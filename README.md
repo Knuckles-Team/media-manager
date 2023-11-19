@@ -28,6 +28,7 @@ Manage your media
 - Set Title and Comment metadata to match filename
 - Apply subtitles in media's "Sub" directory automatically
 - Move media to desired destination
+- Optionally optimize your media with the latest HEVC codec
 
 Supports Media:
 - MKV
