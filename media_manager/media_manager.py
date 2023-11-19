@@ -190,8 +190,9 @@ class MediaManager:
             try:
                 self.audio_tags = music_tag.load_file(os.path.normpath(os.path.join(self.directory, self.media_file)))
             except Exception as e:
-                print(
-                    f"Unable to open file {os.path.normpath(os.path.join(self.directory, self.media_file))}: \n{e}...\n\nTrying new File Path: {self.new_media_file_path}...")
+                print(f"Unable to open file {os.path.normpath(os.path.join(self.directory, self.media_file))}: \n"
+                      f"{e}...\n\n"
+                      f"Trying new File Path: {self.new_media_file_path}...")
                 try:
                     self.audio_tags = music_tag.load_file(self.new_media_file_path)
                 except Exception as e2:
@@ -405,7 +406,8 @@ class MediaManager:
                 current_title_metadata = ffmpeg.probe(self.new_media_file_path)['format']['tags']['title']
             else:
                 current_title_metadata = ""
-            video_codec = next(s for s in ffmpeg.probe(self.new_media_file_path)['streams'] if s['codec_type'] == 'video')['codec_name']
+            video_codec = next(s for s in ffmpeg.probe(self.new_media_file_path)['streams']
+                               if s['codec_type'] == 'video')['codec_name']
             print(f"Video Codec Detected: {video_codec}")
         except Exception as e:
             current_title_metadata = ""
@@ -457,7 +459,8 @@ class MediaManager:
                 os.remove(self.new_media_file_path)
                 os.rename(self.temporary_media_file_path, self.new_media_file_path)
             self.media_file_index = 0
-        elif (current_title_metadata != self.new_file_name or (self.optimize and video_codec != "hevc")) and self.subtitle is True:
+        elif ((current_title_metadata != self.new_file_name or (self.optimize and video_codec != "hevc"))
+              and self.subtitle is True):
             subtitle_file = "English.srt"
             subtitle_files = []
             if self.media_type == "series" and os.path.isdir(f"{self.parent_directory}/{self.folder_name}/Subs"):
@@ -601,7 +604,8 @@ class MediaManager:
             self.media_detection()
             if self.file_extension[1:] in self.supported_video_types:
                 self.clean_file_name()
-            # For Videos, rename the file before setting the metadata, for Audio, set the metadata first, then rename the file
+            # For Videos, rename the file before setting the metadata,
+            # For Audio, set the metadata first, then rename the file
             if self.file_extension[1:] in self.supported_video_types:
                 self.verify_parent_directory()
                 self.rename_file()
@@ -638,7 +642,8 @@ class MediaManager:
                         and re.search("s[0-9][0-9]*e[0-9][0-9]*", file) is None:
                     move = True
                     break
-                if media_type == "music" and (bool(re.search(".mp3", file)) or bool(re.search(".m4a", file))):
+                if media_type == "music" and (bool(re.search(".mp3", file))
+                                              or bool(re.search(".m4a", file))):
                     move = True
                     break
             file_length = len(str(os.path.basename(self.media_file_directories[media_directory_index])))
