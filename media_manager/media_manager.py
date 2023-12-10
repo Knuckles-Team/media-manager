@@ -524,6 +524,8 @@ class MediaManager:
         else:
             self.media_file_index += 1
         self.completed_media_files.append(self.media_files[current_index])
+        self.print(f"Completed File: {self.completed_media_files[len(self.completed_media_files) - 1]}\n"
+                   f"All Completed Files: {self.completed_media_files}")
         self.print(f"\tMetadata Updated: {os.path.basename(self.new_media_file_path)}")
 
     # Rename directory
