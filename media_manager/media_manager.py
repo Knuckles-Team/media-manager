@@ -159,6 +159,7 @@ class MediaManager:
         self.supported_video_types = ['mp4', 'mkv']
         self.video_codec = "copy"
         self.audio_codec = "copy"
+        self.subtitle_codec = "copy"
         self.output_parameters = {}
         self.preset = "medium"
         self.audio_bitrate = '128k'
@@ -193,12 +194,14 @@ class MediaManager:
         if self.optimize:
             self.video_codec = "libx265"
             self.audio_codec = "aac"
+            self.subtitle_codec = "copy"
             self.output_parameters['crf'] = self.crf
             self.output_parameters['audio_bitrate'] = self.audio_bitrate
             self.output_parameters['preset'] = self.preset
         else:
             self.video_codec = "copy"
             self.audio_codec = "copy"
+            self.subtitle_codec = "copy"
             self.output_parameters.pop('crf', None)
             self.output_parameters.pop('audio_bitrate', None)
             self.output_parameters.pop('preset', None)
@@ -212,6 +215,7 @@ class MediaManager:
             'map': 0,
             'vcodec': self.video_codec,
             'acodec': self.audio_codec,
+            'scodec': self.subtitle_codec,
             'metadata:g:0': f"title={self.new_file_name}",
             'metadata:g:1': f"comment={self.new_file_name}"
         }
