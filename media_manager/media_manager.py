@@ -15,8 +15,10 @@ try:
     from shazamio import Shazam
     import asyncio
     from urllib.request import urlopen
+    music_feature = True
 except (ModuleNotFoundError, ImportError) as e:
     print("Music managing disabled")
+    music_feature = False
 
 
 class MediaManager:
@@ -157,7 +159,10 @@ class MediaManager:
             columns = 50
         self.terminal_width = columns
         self.max_file_length = self.terminal_width - 50
-        self.shazam = Shazam()
+        if music_feature:
+            self.shazam = Shazam()
+        else:
+            self.shazam = None
         self.supported_audio_types = ['mp3', 'm4a', 'flac', 'aac', 'aiff', 'dsf', 'ogg', 'opus', 'wav', 'wv']
         self.supported_video_types = ['mp4', 'mkv']
         self.video_codec = "copy"
@@ -300,7 +305,7 @@ class MediaManager:
         """
         self.parent_directory = os.path.dirname(os.path.normpath(self.directory))
         self.folder_name = os.path.basename(os.path.normpath(self.directory))
-        if self.file_extension[1:] in self.supported_audio_types:
+        if self.file_extension[1:] in self.supported_audio_types and music_feature:
             self.media_type = "music"
             self.audio_tags = None
             try:
