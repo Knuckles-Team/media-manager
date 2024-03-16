@@ -8,12 +8,15 @@ import getopt
 import ffmpeg
 import shutil
 import glob
-import music_tag
 import asyncio
 import json
-from shazamio import Shazam
 from urllib.request import urlopen
 from media_manager.version import __version__, __author__, __credits__
+try:
+    import music_tag
+    from shazamio import Shazam
+except (ModuleNotFoundError, ImportError) as e:
+    print("Music managing disabled")
 
 
 class MediaManager:
