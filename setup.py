@@ -30,6 +30,12 @@ setup(
     packages=['media_manager'],
     include_package_data=True,
     install_requires=[str(requirement.requirement) for requirement in requirements],
+    extras_require={
+        'music': [
+            "shazamio>=0.5.1",
+            "music-tag>=0.4.3"
+        ]
+    },
     py_modules=['media_manager'],
     package_data={'media_manager': ['media_manager']},
     classifiers=[
