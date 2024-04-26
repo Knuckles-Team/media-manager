@@ -288,7 +288,7 @@ class MediaManager:
         """
         return self.media_file_directories
 
-    def print(self, string: str, quiet: Optional[bool], end: Optional[str] = "\n") -> None:
+    def print(self, string: str, quiet: Optional[bool] = True, end: Optional[str] = "\n") -> None:
         """
         Print a string.
 
