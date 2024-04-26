@@ -543,7 +543,7 @@ class MediaManager:
                    f"\t\tGenre: {self.audio_tags['genre']}\n"
                    f"\t\tCover Art URL: {song['track']['images']['coverart']}\n"
                    f"\tMetadata Saved Successfully!")
-        self.media_file_index = 0
+        self.media_file_index += 1
 
     # Check if media metadata title is the same as what is proposed
     def set_video_metadata(self) -> None:
@@ -608,7 +608,7 @@ class MediaManager:
             if not failure:
                 os.remove(self.new_media_file_path)
                 os.rename(self.temporary_media_file_path, self.new_media_file_path)
-            self.media_file_index = 0
+            self.media_file_index += 1
         elif ((current_title_metadata != self.new_file_name or (self.optimize and video_codec != "hevc"))
               and self.subtitle is True):
             subtitle_file = "English.srt"
@@ -670,7 +670,7 @@ class MediaManager:
                 if not failure:
                     os.remove(self.new_media_file_path)
                     os.rename(self.temporary_media_file_path, self.new_media_file_path)
-            self.media_file_index = 0
+            self.media_file_index += 1
         else:
             self.media_file_index += 1
         self.completed_media_files.append(self.media_files[current_index])
