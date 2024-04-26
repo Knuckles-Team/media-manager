@@ -295,8 +295,6 @@ class MediaManager:
         if not self.quiet:
             end = "\n"
             print(string, end=end)
-        else:
-            print(string, end=end)
 
     # Detect if series or a movie
     def media_detection(self):
@@ -534,7 +532,7 @@ class MediaManager:
         self.audio_tags['artwork'].first.thumbnail([64, 64])
         self.audio_tags.save()
         self.completed_media_files.append(self.media_files[self.media_file_index])
-        print(f"\t\tTrack: {self.audio_tags['title']}\n"
+        self.print(f"\t\tTrack: {self.audio_tags['title']}\n"
               f"\t\tArtist:{self.audio_tags['artist']}\n"
               f"\t\tAlbum: {self.audio_tags['album']}\n"
               f"\t\tYear: {self.audio_tags['year']}\n"
