@@ -10,11 +10,13 @@ import shutil
 import glob
 import json
 from media_manager.version import __version__, __author__, __credits__
+
 try:
     import music_tag
     from shazamio import Shazam
     import asyncio
     from urllib.request import urlopen
+
     music_feature = True
 except (ModuleNotFoundError, ImportError) as e:
     print("Music managing disabled")
@@ -533,13 +535,13 @@ class MediaManager:
         self.audio_tags.save()
         self.completed_media_files.append(self.media_files[self.media_file_index])
         self.print(f"\t\tTrack: {self.audio_tags['title']}\n"
-              f"\t\tArtist:{self.audio_tags['artist']}\n"
-              f"\t\tAlbum: {self.audio_tags['album']}\n"
-              f"\t\tYear: {self.audio_tags['year']}\n"
-              f"\t\tComments: {self.audio_tags['comment']}\n"
-              f"\t\tGenre: {self.audio_tags['genre']}\n"
-              f"\t\tCover Art URL: {song['track']['images']['coverart']}\n"
-              f"\tMetadata Saved Successfully!")
+                   f"\t\tArtist:{self.audio_tags['artist']}\n"
+                   f"\t\tAlbum: {self.audio_tags['album']}\n"
+                   f"\t\tYear: {self.audio_tags['year']}\n"
+                   f"\t\tComments: {self.audio_tags['comment']}\n"
+                   f"\t\tGenre: {self.audio_tags['genre']}\n"
+                   f"\t\tCover Art URL: {song['track']['images']['coverart']}\n"
+                   f"\tMetadata Saved Successfully!")
         self.media_file_index = 0
 
     # Check if media metadata title is the same as what is proposed
@@ -555,7 +557,7 @@ class MediaManager:
                 current_title_metadata = ""
             video_codec = next(s for s in ffmpeg.probe(self.new_media_file_path)['streams']
                                if s['codec_type'] == 'video')['codec_name']
-            print(f"Video Codec Detected: {video_codec}")
+            self.print(f"Video Codec Detected: {video_codec}")
         except Exception as e:
             current_title_metadata = ""
             video_codec = ""
@@ -748,8 +750,8 @@ class MediaManager:
                                  f"{self.total_media_files}): " \
                                  f"{pretty_print_filename}"
             print(f"Processing ({self.media_file_index + 1}/"
-                  f"{self.total_media_files}): "
-                  f"{pretty_print_filename}")
+                       f"{self.total_media_files}): "
+                       f"{pretty_print_filename}", end='\r')
             processing_message = processing_message.ljust(self.terminal_width)
             self.print(processing_message, end='\r')
             self.directory = os.path.normpath(os.path.dirname(self.media_files[self.media_file_index]))
