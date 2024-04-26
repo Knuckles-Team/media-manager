@@ -5,6 +5,8 @@ import os
 import sys
 import re
 import getopt
+from typing import Optional, List
+
 import ffmpeg
 import shutil
 import glob
@@ -160,7 +162,7 @@ class MediaManager:
         except Exception as e:
             columns = 50
         self.terminal_width = columns
-        self.max_file_length = self.terminal_width - 50
+        self.max_file_length = self.terminal_width - 21
         if music_feature:
             self.shazam = Shazam()
         else:
@@ -175,7 +177,7 @@ class MediaManager:
         self.audio_bitrate = '128k'
         self.crf = 28
 
-    def set_verbose(self, quiet=True):
+    def set_verbose(self, quiet=True) -> None:
         """
         Set the verbosity level.
 
@@ -184,7 +186,7 @@ class MediaManager:
         """
         self.quiet = quiet
 
-    def set_subtitle(self, subtitle: bool):
+    def set_subtitle(self, subtitle: bool) -> None:
         """
         Set the subtitle flag.
 
@@ -193,7 +195,7 @@ class MediaManager:
         """
         self.subtitle = subtitle
 
-    def set_optimize(self, optimize: bool):
+    def set_optimize(self, optimize: bool) -> None:
         """
         Set the optimization flag.
 
@@ -216,7 +218,7 @@ class MediaManager:
             self.output_parameters.pop('audio_bitrate', None)
             self.output_parameters.pop('preset', None)
 
-    def build_output_parameters(self):
+    def build_output_parameters(self) -> None:
         """
         Build output parameters for media processing.
         """
@@ -230,7 +232,7 @@ class MediaManager:
             'metadata:g:1': f"comment={self.new_file_name}"
         }
 
-    def set_crf(self, crf):
+    def set_crf(self, crf) -> None:
         """
         Set the Constant Rate Factor (CRF) for optimization.
 
@@ -239,7 +241,7 @@ class MediaManager:
         """
         self.crf = crf
 
-    def set_preset(self, preset):
+    def set_preset(self, preset) -> None:
         """
         Set the optimization preset.
 
@@ -248,7 +250,7 @@ class MediaManager:
         """
         self.preset = preset
 
-    def set_audio_bitrate(self, audio_bitrate):
+    def set_audio_bitrate(self, audio_bitrate) -> None:
         """
         Set the audio bitrate for optimization.
 
@@ -257,7 +259,7 @@ class MediaManager:
         """
         self.audio_bitrate = audio_bitrate
 
-    def set_media_directory(self, media_directory: str):
+    def set_media_directory(self, media_directory: str) -> None:
         """
         Set the media directory.
 
@@ -268,7 +270,7 @@ class MediaManager:
         if not self.media_directory.endswith(os.path.sep):
             self.media_directory += os.path.sep
 
-    def get_media_list(self):
+    def get_media_list(self) -> List[str]:
         """
         Get the list of media files.
 
@@ -277,7 +279,7 @@ class MediaManager:
         """
         return self.media_files
 
-    def get_media_directory_list(self):
+    def get_media_directory_list(self) -> List[str]:
         """
         Get the list of media file directories.
 
@@ -286,7 +288,7 @@ class MediaManager:
         """
         return self.media_file_directories
 
-    def print(self, string, end="\n"):
+    def print(self, string: str, quiet: Optional[bool], end: Optional[str] = "\n") -> None:
         """
         Print a string.
 
@@ -294,12 +296,11 @@ class MediaManager:
         - string: String to print.
         - end: Ending character for print statement.
         """
-        if not self.quiet:
-            end = "\n"
+        if self.quiet is False or quiet is False:
             print(string, end=end)
 
     # Detect if series or a movie
-    def media_detection(self):
+    def media_detection(self) -> None:
         """
         Detect the type of media (series, movie, or music).
         """
@@ -334,14 +335,14 @@ class MediaManager:
                 self.print(f"\tDetected media type: Media")
 
     # Clean filename
-    def clean_file_name(self):
+    def clean_file_name(self) -> None:
         """
         Clean the file name using specified filters.
         """
         for key in self.filters:
             self.new_file_name = re.sub(str(key), str(self.filters[key]), self.new_file_name)
 
-    def verify_parent_directory(self):
+    def verify_parent_directory(self) -> None:
         """
         Verify and update the parent directory.
         """
@@ -392,7 +393,7 @@ class MediaManager:
             self.print(f"\tParent directory already exists: {self.directory}")
 
     # Rediscover cleaned media
-    def find_media(self):
+    def find_media(self) -> None:
         """
         Scan for media files in the media directory.
         """
@@ -429,7 +430,7 @@ class MediaManager:
             self.total_media_files = len(self.media_files)
         self.print(f"\tMedia Found! ({len(self.media_file_directories)} files)")
 
-    def rename_file(self):
+    def rename_file(self) -> None:
         """
         Rename the media file based on the cleaned file name.
         """
@@ -454,7 +455,7 @@ class MediaManager:
             self.print(f"\tFile Renamed: \n\t\t{old_file_path} \n\t\t➜ \n\t\t{self.new_media_file_path}")
 
     # Clean Subtitle directories
-    def clean_subtitle_directory(self, subtitle_directory: str):
+    def clean_subtitle_directory(self, subtitle_directory: str) -> None:
         """
         Clean subtitle directories.
 
@@ -475,7 +476,7 @@ class MediaManager:
                     os.rename(subtitle_directories[subtitle_directory_index],
                               os.path.normpath(os.path.join(subtitle_parent_directory, new_folder_name)))
 
-    def set_media_metadata(self):
+    def set_media_metadata(self) -> None:
         """
         Set metadata for the media file.
         """
@@ -485,7 +486,7 @@ class MediaManager:
             loop = asyncio.get_event_loop()
             loop.run_until_complete(self.set_audio_metadata())
 
-    async def set_audio_metadata(self):
+    async def set_audio_metadata(self) -> None:
         """
         Set audio metadata for the media file.
         """
@@ -545,7 +546,7 @@ class MediaManager:
         self.media_file_index = 0
 
     # Check if media metadata title is the same as what is proposed
-    def set_video_metadata(self):
+    def set_video_metadata(self) -> None:
         """
         Set video metadata for the media file.
         """
@@ -678,7 +679,7 @@ class MediaManager:
         self.print(f"\tMetadata Updated: {os.path.basename(self.new_media_file_path)}")
 
     # Rename directory
-    def rename_directory(self):
+    def rename_directory(self) -> None:
         """
         Rename the media directory.
         """
@@ -720,7 +721,7 @@ class MediaManager:
             self.print(f"\tRenaming directory not needed: {os.path.normpath(os.path.join(self.directory, ''))}")
 
     # Cleanup Variables
-    def reset_variables(self):
+    def reset_variables(self) -> None:
         """
         Reset class variables to their initial state.
         """
@@ -735,7 +736,7 @@ class MediaManager:
         self.media_file_directories = []
 
     # Iterate through all media files found
-    def clean_media(self):
+    def clean_media(self) -> None:
         """
         Process and clean all media files found.
         """
@@ -746,14 +747,15 @@ class MediaManager:
                 truncate_amount = abs(self.max_file_length - file_length)
             pretty_print_filename = str(os.path.basename(self.media_files[self.media_file_index]))
             pretty_print_filename = pretty_print_filename[truncate_amount:file_length]
-            processing_message = f"Processing ({self.media_file_index + 1}/" \
-                                 f"{self.total_media_files}): " \
-                                 f"{pretty_print_filename}"
-            print(f"Processing ({self.media_file_index + 1}/"
-                       f"{self.total_media_files}): "
-                       f"{pretty_print_filename}", end='\r')
+            processing_message = (f"Processing ({self.media_file_index + 1}/"
+                                  f"{self.total_media_files}): {pretty_print_filename}")
+            max_line_length = max(self.max_file_length, len(processing_message))
+            padding = ' ' * (max_line_length - len(processing_message))
+            processing_message = (f"Processing ({self.media_file_index + 1}/"
+                                  f"{self.total_media_files}): {pretty_print_filename}{padding}")
             processing_message = processing_message.ljust(self.terminal_width)
-            self.print(processing_message, end='\r')
+            self.print(processing_message, end='\r', quiet=False)
+            sys.stdout.flush()
             self.directory = os.path.normpath(os.path.dirname(self.media_files[self.media_file_index]))
             if not self.directory.endswith(os.path.sep):
                 self.directory += os.path.sep
@@ -779,7 +781,7 @@ class MediaManager:
         self.reset_variables()
 
     # Move media to new destination
-    def move_media(self, target_directory: str, media_type="media"):
+    def move_media(self, target_directory: str, media_type="media") -> None:
         """
         Move media files to a new destination.
 
