@@ -451,7 +451,7 @@ class MediaManager:
             os.rename(old_file_path, self.new_media_file_path)
             self.file_name = self.new_file_name
             self.media_files[self.media_file_index] = self.new_media_file_path
-            self.media_file_index = 0
+            self.media_file_index = len(self.completed_media_files)
             self.print(f"\tFile Renamed: \n\t\t{old_file_path} \n\t\t➜ \n\t\t{self.new_media_file_path}")
 
     # Clean Subtitle directories
@@ -716,7 +716,7 @@ class MediaManager:
                 os.rename(os.path.normpath(os.path.join(self.directory, '')),
                           os.path.normpath(os.path.join(self.parent_directory, self.folder_name)))
             self.find_media()
-            self.media_file_index = len(self.completed_media_files)
+            self.media_file_index = 0
         else:
             self.print(f"\tRenaming directory not needed: {os.path.normpath(os.path.join(self.directory, ''))}")
 
