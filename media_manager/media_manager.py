@@ -833,7 +833,7 @@ class MediaManager:
                                       f"{media_directory} " \
                                       f"➜ {target_directory}"
                     merging_message = merging_message.ljust(self.terminal_width)
-                    self.print(merging_message, end='\r')
+                    self.print(merging_message, end='\r', quiet=False)
                     for file_name in os.listdir(self.media_file_directories[media_directory_index]):
                         # construct full file path
                         source = os.path.normpath(
@@ -849,7 +849,7 @@ class MediaManager:
                                     shutil.move(source, destination)
                                 except Exception as e:
                                     self.print(f"\t\tUnable to move to target directory: {target_directory}]\n\t\t"
-                                               f"Error: {e}")
+                                               f"Error: {e}", quiet=False)
                     if os.path.isdir(
                             os.path.normpath(
                                 os.path.join(
@@ -892,11 +892,12 @@ class MediaManager:
                                      f"{media_directory} " \
                                      f"➜ {target_directory}"
                     moving_message = moving_message.ljust(self.terminal_width)
-                    self.print(moving_message, end='\r')
+                    self.print(moving_message, end='\r', quiet=False)
                     try:
                         shutil.move(self.media_file_directories[media_directory_index], target_directory)
                     except Exception as e:
-                        self.print(f"\nUnable to move to target directory: {target_directory}]\n\t\tError: {e}")
+                        self.print(f"\nUnable to move to target directory: {target_directory}]\n\t\tError: {e}",
+                                   quiet=False)
 
 
 def media_manager(argv):
