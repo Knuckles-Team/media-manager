@@ -716,7 +716,7 @@ class MediaManager:
                 os.rename(os.path.normpath(os.path.join(self.directory, '')),
                           os.path.normpath(os.path.join(self.parent_directory, self.folder_name)))
             self.find_media()
-            self.media_file_index = 0
+            self.media_file_index = len(self.completed_media_files)
         else:
             self.print(f"\tRenaming directory not needed: {os.path.normpath(os.path.join(self.directory, ''))}")
 
