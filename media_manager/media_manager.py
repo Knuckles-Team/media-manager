@@ -608,6 +608,7 @@ class MediaManager:
             if not failure:
                 os.remove(self.new_media_file_path)
                 os.rename(self.temporary_media_file_path, self.new_media_file_path)
+            self.find_media()
             self.media_file_index = 0
         elif ((current_title_metadata != self.new_file_name or (self.optimize and video_codec != "hevc"))
               and self.subtitle is True):
@@ -670,13 +671,14 @@ class MediaManager:
                 if not failure:
                     os.remove(self.new_media_file_path)
                     os.rename(self.temporary_media_file_path, self.new_media_file_path)
+            self.find_media()
             self.media_file_index = 0
+        else:
+            self.media_file_index += 1
         self.completed_media_files.append(self.media_files[current_index])
         logging.debug(f"Completed File: {self.completed_media_files[len(self.completed_media_files) - 1]}\n"
                       f"All Completed Files: {self.completed_media_files}")
         logging.debug(f"\tMetadata Updated: {os.path.basename(self.new_media_file_path)}")
-        self.find_media()
-        self.media_file_index = 0
 
     # Rename directory
     def rename_directory(self) -> None:
