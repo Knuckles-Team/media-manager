@@ -748,12 +748,12 @@ class MediaManager:
             pretty_print_filename = str(os.path.basename(self.media_files[self.media_file_index]))
             pretty_print_filename = pretty_print_filename[truncate_amount:file_length]
             processing_message = (f"Processing ({len(self.completed_media_files)}/"
-                                  f"{self.total_media_files}) Remaining ({self.media_file_index + 1}): "
+                                  f"{self.total_media_files}): "
                                   f"{pretty_print_filename}")
             max_line_length = max(self.max_file_length, len(processing_message))
             padding = ' ' * (max_line_length - len(processing_message))
             processing_message = (f"Processing ({len(self.completed_media_files)}/"
-                                  f"{self.total_media_files}) Remaining ({self.media_file_index + 1}): "
+                                  f"{self.total_media_files}): "
                                   f"{pretty_print_filename}{padding}")
             processing_message = processing_message.ljust(self.terminal_width)
             self.print(processing_message, end='\r', quiet=False)
