@@ -21,7 +21,7 @@
 ![PyPI - Implementation](https://img.shields.io/pypi/implementation/media-manager)
 
 
-*Version: 0.75.13*
+*Version: 0.75.14*
 
 Manage your media
 - Automatically clean file names 
