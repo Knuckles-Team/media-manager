@@ -673,6 +673,7 @@ class MediaManager:
             self.media_file_index = 0
         else:
             self.media_file_index += 1
+            self.completed_media_files.append(self.media_files[current_index])
             return
         self.completed_media_files.append(self.media_files[current_index])
         self.find_media()
