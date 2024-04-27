@@ -5,6 +5,7 @@ import os
 import sys
 import re
 import getopt
+import logging
 from typing import Optional, List
 
 import ffmpeg
@@ -418,14 +419,13 @@ class MediaManager:
                 os.remove(file)
         self.media_files.sort()
         for i in self.completed_media_files:
-            # print(f"\t\tVerifying completed: {i}")
+            self.print(f"\t\tVerifying completed: {i}")
             if i in self.media_files:
-                # print(f"\t\tRemoving completed: {i}")
+                self.print(f"\t\tRemoving completed: {i}")
                 self.media_files.remove(i)
-        if not self.quiet:
-            self.print(
-                f"Completed({len(self.completed_media_files)}): {self.completed_media_files}\n"
-                f"Detected Remaining({len(self.media_files)}): {self.media_files}")
+        self.print(
+            f"Completed({len(self.completed_media_files)}): {self.completed_media_files}\n"
+            f"Detected Remaining({len(self.media_files)}): {self.media_files}")
         if total_media:
             self.total_media_files = len(self.media_files)
         self.print(f"\tMedia Found! ({len(self.media_file_directories)} files)")
@@ -451,7 +451,7 @@ class MediaManager:
             os.rename(old_file_path, self.new_media_file_path)
             self.file_name = self.new_file_name
             self.media_files[self.media_file_index] = self.new_media_file_path
-            self.media_file_index = len(self.completed_media_files)
+            self.media_file_index = 0
             self.print(f"\tFile Renamed: \n\t\t{old_file_path} \n\t\t➜ \n\t\t{self.new_media_file_path}")
 
     # Clean Subtitle directories
@@ -543,7 +543,8 @@ class MediaManager:
                    f"\t\tGenre: {self.audio_tags['genre']}\n"
                    f"\t\tCover Art URL: {song['track']['images']['coverart']}\n"
                    f"\tMetadata Saved Successfully!")
-        self.media_file_index += 1
+        self.media_file_index = 0
+        self.find_media()
 
     # Check if media metadata title is the same as what is proposed
     def set_video_metadata(self) -> None:
@@ -608,7 +609,7 @@ class MediaManager:
             if not failure:
                 os.remove(self.new_media_file_path)
                 os.rename(self.temporary_media_file_path, self.new_media_file_path)
-            self.media_file_index += 1
+            self.media_file_index = 0
         elif ((current_title_metadata != self.new_file_name or (self.optimize and video_codec != "hevc"))
               and self.subtitle is True):
             subtitle_file = "English.srt"
@@ -670,13 +671,14 @@ class MediaManager:
                 if not failure:
                     os.remove(self.new_media_file_path)
                     os.rename(self.temporary_media_file_path, self.new_media_file_path)
-            self.media_file_index += 1
+            self.media_file_index = 0
         else:
             self.media_file_index += 1
         self.completed_media_files.append(self.media_files[current_index])
-        self.print(f"Completed File: {self.completed_media_files[len(self.completed_media_files) - 1]}\n"
-                   f"All Completed Files: {self.completed_media_files}")
-        self.print(f"\tMetadata Updated: {os.path.basename(self.new_media_file_path)}")
+        logging.debug(f"Completed File: {self.completed_media_files[len(self.completed_media_files) - 1]}\n"
+                      f"All Completed Files: {self.completed_media_files}")
+        logging.debug(f"\tMetadata Updated: {os.path.basename(self.new_media_file_path)}")
+        self.find_media()
 
     # Rename directory
     def rename_directory(self) -> None:
@@ -716,7 +718,7 @@ class MediaManager:
                 os.rename(os.path.normpath(os.path.join(self.directory, '')),
                           os.path.normpath(os.path.join(self.parent_directory, self.folder_name)))
             self.find_media()
-            self.media_file_index = len(self.completed_media_files)
+            self.media_file_index = 0
         else:
             self.print(f"\tRenaming directory not needed: {os.path.normpath(os.path.join(self.directory, ''))}")
 
@@ -747,11 +749,11 @@ class MediaManager:
                 truncate_amount = abs(self.max_file_length - file_length)
             pretty_print_filename = str(os.path.basename(self.media_files[self.media_file_index]))
             pretty_print_filename = pretty_print_filename[truncate_amount:file_length]
-            processing_message = (f"Processing ({len(self.completed_media_files)}/"
+            processing_message = (f"Processing ({self.media_file_index}/"
                                   f"{self.total_media_files}): {pretty_print_filename}")
             max_line_length = max(self.max_file_length, len(processing_message))
             padding = ' ' * (max_line_length - len(processing_message))
-            processing_message = (f"Processing ({len(self.completed_media_files)}/"
+            processing_message = (f"Processing ({self.media_file_index}/"
                                   f"{self.total_media_files}): {pretty_print_filename}{padding}")
             processing_message = processing_message.ljust(self.terminal_width)
             self.print(processing_message, end='\r', quiet=False)
