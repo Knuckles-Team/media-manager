@@ -502,7 +502,6 @@ class MediaManager:
                 and f"{self.audio_tags['tracktitle'].first}{self.file_extension}" == self.media_file.split('-')[
             1].strip():
             print("File metadata is already set, moving on...")
-            self.media_file_index += 1
             return
 
         print(f"\t⚡ Shazam ⚡ {self.media_file}...")
@@ -543,8 +542,8 @@ class MediaManager:
                    f"\t\tGenre: {self.audio_tags['genre']}\n"
                    f"\t\tCover Art URL: {song['track']['images']['coverart']}\n"
                    f"\tMetadata Saved Successfully!")
-        self.media_file_index = 0
         self.find_media()
+        self.media_file_index = 0
 
     # Check if media metadata title is the same as what is proposed
     def set_video_metadata(self) -> None:
@@ -672,13 +671,12 @@ class MediaManager:
                     os.remove(self.new_media_file_path)
                     os.rename(self.temporary_media_file_path, self.new_media_file_path)
             self.media_file_index = 0
-        else:
-            self.media_file_index += 1
         self.completed_media_files.append(self.media_files[current_index])
         logging.debug(f"Completed File: {self.completed_media_files[len(self.completed_media_files) - 1]}\n"
                       f"All Completed Files: {self.completed_media_files}")
         logging.debug(f"\tMetadata Updated: {os.path.basename(self.new_media_file_path)}")
         self.find_media()
+        self.media_file_index = 0
 
     # Rename directory
     def rename_directory(self) -> None:
@@ -782,6 +780,7 @@ class MediaManager:
                 self.set_media_metadata()
                 self.rename_file()
             self.rename_directory()
+            self.media_file_index += 1
         self.reset_variables()
 
     # Move media to new destination
@@ -977,7 +976,7 @@ def media_manager(argv):
         media_manager_instance.move_media(target_directory=media_directory, media_type="media")
     if music_flag:
         media_manager_instance.move_media(target_directory=music_directory, media_type="music")
-    print("Complete!")
+    print("\nComplete!")
 
 
 def usage():
