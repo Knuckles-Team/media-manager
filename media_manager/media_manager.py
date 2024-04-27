@@ -610,6 +610,7 @@ class MediaManager:
                 os.rename(self.temporary_media_file_path, self.new_media_file_path)
             self.find_media()
             self.media_file_index = 0
+            self.completed_media_files.append(self.media_files[current_index])
         elif ((current_title_metadata != self.new_file_name or (self.optimize and video_codec != "hevc"))
               and self.subtitle is True):
             subtitle_file = "English.srt"
@@ -673,9 +674,9 @@ class MediaManager:
                     os.rename(self.temporary_media_file_path, self.new_media_file_path)
             self.find_media()
             self.media_file_index = 0
+            self.completed_media_files.append(self.media_files[current_index])
         else:
             self.media_file_index += 1
-        self.completed_media_files.append(self.media_files[current_index])
         logging.debug(f"Completed File: {self.completed_media_files[len(self.completed_media_files) - 1]}\n"
                       f"All Completed Files: {self.completed_media_files}")
         logging.debug(f"\tMetadata Updated: {os.path.basename(self.new_media_file_path)}")
