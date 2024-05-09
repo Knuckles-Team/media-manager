@@ -24,7 +24,7 @@
 *Version: 0.75.23*
 
 Manage your media
-- Automatically clean file names 
+- Automatically clean file names
 - Set Title and Comment metadata to match filename
 - Apply subtitles in media's "Sub" directory automatically
 - Move media to desired destination
@@ -59,7 +59,7 @@ This repository is actively maintained - Contributions are welcome!
 media-manager -d "/home/User/Downloads" -m "/media/Movies" -t "/media/TV" -s
 ```
 #### Before
-> /home/User/Downloads/The.Lion.King.1993.1080p.[TheBay].YIFY/The.Lion.King.1993.1080p.[TheBay].YIFY.mp4 
+> /home/User/Downloads/The.Lion.King.1993.1080p.[TheBay].YIFY/The.Lion.King.1993.1080p.[TheBay].YIFY.mp4
 
 #### After
 > /media/The Lion King 1993 1080p/The Lion King 1993 1080p.mp4
